@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -109,12 +110,14 @@ export function ContainerManagement() {
                     </div>
                     <span className="text-primary text-lg">+</span>
                   </Button>
-                  <Button variant="ghost" className="w-full justify-between text-left">
-                    <div className="flex items-center gap-3">
-                      <Users className="h-4 w-4" />
-                      <span>Clientes</span>
-                    </div>
-                    <span className="text-primary text-lg">+</span>
+                  <Button asChild variant="ghost" className="w-full justify-between text-left">
+                    <Link href="/clientes" className="flex w-full items-center justify-between text-left">
+                      <div className="flex items-center gap-3">
+                        <Users className="h-4 w-4" />
+                        <span>Clientes</span>
+                      </div>
+                      <span className="text-primary text-lg">+</span>
+                    </Link>
                   </Button>
                   <Button
                     variant="secondary"
