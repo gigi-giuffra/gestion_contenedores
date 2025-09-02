@@ -77,10 +77,18 @@ export function ContainerManagement() {
               <SelectValue placeholder="Seleccione el tipo del contenedor" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="20ft">20 pies</SelectItem>
-              <SelectItem value="40ft">40 pies</SelectItem>
-              <SelectItem value="40ft-hc">40 pies HC</SelectItem>
-              <SelectItem value="45ft">45 pies</SelectItem>
+              <SelectItem value="banos">BAÑOS</SelectItem>
+              <SelectItem value="duchas">DUCHAS</SelectItem>
+              <SelectItem value="oficina">OFICINA</SelectItem>
+              <SelectItem value="ofic-bano">OFIC/BAÑO</SelectItem>
+              <SelectItem value="ofic-dormitorio">OFIC/DORMITORIO</SelectItem>
+              <SelectItem value="ofic-separ">OFIC/SEPAR</SelectItem>
+              <SelectItem value="bodega-40">BODEGA 40</SelectItem>
+              <SelectItem value="bodega-50">BODEGA 50%</SelectItem>
+              <SelectItem value="bod-estan">BOD/ESTAN</SelectItem>
+              <SelectItem value="bod-art-pel">BOD ART PEL</SelectItem>
+              <SelectItem value="sala-cambio">SALA CAMBIO</SelectItem>
+              <SelectItem value="bod-estanque">BOD/ESTANQUE</SelectItem>
             </SelectContent>
           </Select>
         </div>
