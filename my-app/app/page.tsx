@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation"
+import { ContainerManagement } from "@/components/container-management"
 
 export default function Home() {
-  redirect("/contenedores")
+  return <ContainerManagement />
 }
