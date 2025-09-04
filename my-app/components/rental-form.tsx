@@ -1,15 +1,26 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Calendar, Upload } from "lucide-react"
 
+interface Container {
+  serieLetra: string
+  numeroSerie: string
+  estado: string
+}
+
 export function RentalForm() {
-  const containers = ["Contenedor A", "Contenedor B"]
+  const [containers, setContainers] = useState<Container[]>([])
   const clients = ["Cliente A", "Cliente B"]
+
+  useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem("contenedores") || "[]")
+    setContainers(stored)
+  }, [])
 
   const [formData, setFormData] = useState({
     contenedor: "",
@@ -33,18 +44,48 @@ export function RentalForm() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <Label htmlFor="contenedor">Contenedor</Label>
-          <Select value={formData.contenedor} onValueChange={(value) => handleChange("contenedor", value)}>
-            <SelectTrigger id="contenedor" className="bg-input">
-              <SelectValue placeholder="Seleccionar contenedor" />
-            </SelectTrigger>
-            <SelectContent>
-              {containers.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {(() => {
+            const availableContainers = containers.filter(
+              (c) => c.estado !== "Arrendado"
+            )
+            return (
+              <Select
+                value={formData.contenedor}
+                onValueChange={(value) => handleChange("contenedor", value)}
+                disabled={availableContainers.length === 0}
+              >
+                <SelectTrigger
+                  id="contenedor"
+                  className="bg-input"
+                  disabled={availableContainers.length === 0}
+                >
+                  <SelectValue
+                    placeholder={
+                      availableContainers.length
+                        ? "Seleccionar contenedor"
+                        : "No hay contenedores registrados"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableContainers.length ? (
+                    availableContainers.map((c) => {
+                      const serie = `${c.serieLetra}${c.numeroSerie}`
+                      return (
+                        <SelectItem key={serie} value={serie}>
+                          {serie}
+                        </SelectItem>
+                      )
+                    })
+                  ) : (
+                    <SelectItem value="" disabled>
+                      No hay contenedores registrados
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
+            )
+          })()}
         </div>
 
         <div className="space-y-2">
