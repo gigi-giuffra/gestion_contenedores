@@ -95,13 +95,23 @@ export function DashboardLayout({ children, breadcrumbs }: DashboardLayoutProps)
                   Contenedores
                 </h3>
                 <div className="space-y-1">
-                  <Button variant="ghost" className="w-full justify-between text-left">
-                    <div className="flex items-center gap-3">
-                      <Package className="h-4 w-4" />
-                      <span>Arrendamientos</span>
-                    </div>
-                    <span className="text-primary text-lg">+</span>
-                  </Button>
+                  <div className="flex w-full items-center justify-between">
+                    <Button
+                      asChild
+                      variant="ghost"
+                      className="flex-1 justify-start text-left"
+                    >
+                      <Link href="/arrendamientos" className="flex items-center gap-3">
+                        <Package className="h-4 w-4" />
+                        <span>Arrendamientos</span>
+                      </Link>
+                    </Button>
+                    <Button asChild variant="ghost" className="text-primary px-2">
+                      <Link href="/arrendamientos/nuevo">
+                        <span className="text-lg">+</span>
+                      </Link>
+                    </Button>
+                  </div>
                   <div className="flex w-full items-center justify-between">
                     <Button
                       asChild
