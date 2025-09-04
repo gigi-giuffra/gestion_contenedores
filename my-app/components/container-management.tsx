@@ -28,6 +28,29 @@ export function ContainerManagement() {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
+  const handleEstadoChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      estado: value,
+      patio: value === "Arrendado" ? "" : prev.patio,
+    }))
+  }
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault()
+    const { estado, patio } = formData
+    const requiresPatio = estado === "Disponible" || estado === "Mantenimiento"
+    if (requiresPatio && !patio) {
+      alert("Debe seleccionar un patio cuando el contenedor está Disponible o en Mantenimiento")
+      return
+    }
+    if (estado === "Arrendado" && patio) {
+      alert("No debe seleccionar un patio cuando el contenedor está Arrendado")
+      return
+    }
+    console.log("Formulario válido", formData)
+  }
+
   return (
     <DashboardLayout breadcrumbs={["Contenedores", "Añadir Contenedor"]}>
   <Card className="max-w-4xl">
@@ -37,8 +60,9 @@ export function ContainerManagement() {
         Añadir Contenedor
       </CardTitle>
     </CardHeader>
-    <CardContent className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <CardContent>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Serie letra */}
         <div className="space-y-2">
           <Label htmlFor="serie-letra" className="text-sm font-medium">
@@ -98,15 +122,14 @@ export function ContainerManagement() {
           <Label htmlFor="estado" className="text-sm font-medium">
             Estado
           </Label>
-          <Select value={formData.estado} onValueChange={(value) => handleInputChange("estado", value)}>
+          <Select value={formData.estado} onValueChange={handleEstadoChange}>
             <SelectTrigger className="bg-input">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="Disponible">Disponible</SelectItem>
-              <SelectItem value="En uso">En uso</SelectItem>
+              <SelectItem value="Arrendado">Arrendado</SelectItem>
               <SelectItem value="Mantenimiento">Mantenimiento</SelectItem>
-              <SelectItem value="Fuera de servicio">Fuera de servicio</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -116,9 +139,13 @@ export function ContainerManagement() {
           <Label htmlFor="patio" className="text-sm font-medium">
             Patio
           </Label>
-          <Select value={formData.patio} onValueChange={(value) => handleInputChange("patio", value)}>
-            <SelectTrigger className="bg-input">
-              <SelectValue placeholder="Seleccione el patio si el contenedor está disponible, en mantenimiento o en rancho" />
+          <Select
+            value={formData.patio}
+            onValueChange={(value) => handleInputChange("patio", value)}
+            disabled={formData.estado === "Arrendado"}
+          >
+            <SelectTrigger className="bg-input" disabled={formData.estado === "Arrendado"}>
+              <SelectValue placeholder="Seleccione el patio si el contenedor está disponible o en mantenimiento" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="patio-1">PATIO 1</SelectItem>
@@ -270,10 +297,17 @@ export function ContainerManagement() {
 
       {/* Action Buttons */}
       <div className="flex flex-wrap gap-3 pt-6 border-t">
-        <Button className="bg-primary hover:bg-primary/90">Guardar</Button>
-        <Button variant="secondary">Guardar y añadir otro</Button>
-        <Button variant="outline">Guardar y continuar editando</Button>
+        <Button type="submit" className="bg-primary hover:bg-primary/90">
+          Guardar
+        </Button>
+        <Button type="button" variant="secondary">
+          Guardar y añadir otro
+        </Button>
+        <Button type="button" variant="outline">
+          Guardar y continuar editando
+        </Button>
       </div>
+      </form>
     </CardContent>
   </Card>
     </DashboardLayout>
