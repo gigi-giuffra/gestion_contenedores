@@ -101,13 +101,13 @@ export function DashboardLayout({ children, breadcrumbs }: DashboardLayoutProps)
                       variant="ghost"
                       className="flex-1 justify-start text-left"
                     >
-                      <Link href="/arrendamientos" className="flex items-center gap-3">
+                      <Link href="/arriendos" className="flex items-center gap-3">
                         <Package className="h-4 w-4" />
-                        <span>Arrendamientos</span>
+                        <span>Arriendos</span>
                       </Link>
                     </Button>
                     <Button asChild variant="ghost" className="text-primary px-2">
-                      <Link href="/arrendamientos/nuevo">
+                      <Link href="/arriendos/nuevo">
                         <span className="text-lg">+</span>
                       </Link>
                     </Button>

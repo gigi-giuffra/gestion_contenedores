@@ -1,20 +1,21 @@
 import { DashboardLayout } from "@/components/dashboard-layout"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { RentalForm } from "@/components/rental-form"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Package } from "lucide-react"
 
-export default function NewRentalPage() {
+export default function ArriendosPage() {
   return (
-    <DashboardLayout breadcrumbs={["Arrendamientos", "Añadir Arrendamiento"]}>
-      <Card className="max-w-3xl">
+    <DashboardLayout breadcrumbs={["Arriendos"]}>
+      <Card className="max-w-4xl">
         <CardHeader>
           <CardTitle className="text-2xl font-semibold flex items-center gap-3">
             <Package className="h-6 w-6 text-primary" />
-            Añadir Arrendamiento
+            Registro de Arriendos
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <RentalForm />
+          <p className="text-muted-foreground">
+            Aquí se listarán todos los arriendos agregados al sistema.
+          </p>
         </CardContent>
       </Card>
     </DashboardLayout>
