@@ -25,7 +25,7 @@ export function RentalForm() {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
-    console.log("Nuevo arrendamiento", formData)
+    console.log("Nuevo arriendo", formData)
   }
 
   return (
