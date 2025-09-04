@@ -1,8 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface Container {
   serieLetra: string
@@ -19,11 +22,37 @@ interface Container {
 
 export default function ContainersPage() {
   const [containers, setContainers] = useState<Container[]>([])
+  const [filters, setFilters] = useState({
+    tipo: "",
+    patio: "",
+    serie: "",
+  })
 
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem("contenedores") || "[]")
     setContainers(stored)
   }, [])
+
+  const tipos = useMemo(
+    () => Array.from(new Set(containers.map((c) => c.tipo).filter(Boolean))),
+    [containers]
+  )
+
+  const patios = useMemo(
+    () => Array.from(new Set(containers.map((c) => c.patio).filter(Boolean))),
+    [containers]
+  )
+
+  const filteredContainers = useMemo(() => {
+    return containers.filter((c) => {
+      const serieCompleta = `${c.serieLetra}${c.numeroSerie}`.toLowerCase()
+      return (
+        (!filters.tipo || c.tipo === filters.tipo) &&
+        (!filters.patio || c.patio === filters.patio) &&
+        (!filters.serie || serieCompleta.includes(filters.serie.toLowerCase()))
+      )
+    })
+  }, [containers, filters])
 
   return (
     <DashboardLayout breadcrumbs={["Contenedores"]}>
@@ -32,9 +61,72 @@ export default function ContainersPage() {
           <CardTitle className="text-2xl font-semibold">Registro de Contenedores</CardTitle>
         </CardHeader>
         <CardContent>
+          {containers.length > 0 && (
+            <div className="mb-4 grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="filter-tipo" className="text-sm font-medium">
+                  Tipo
+                </Label>
+                <Select
+                  value={filters.tipo}
+                  onValueChange={(value) => setFilters({ ...filters, tipo: value })}
+                >
+                  <SelectTrigger id="filter-tipo" className="bg-input">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todos</SelectItem>
+                    {tipos.map((t) => (
+                      <SelectItem key={t} value={t} className="capitalize">
+                        {t}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="filter-patio" className="text-sm font-medium">
+                  Patio
+                </Label>
+                <Select
+                  value={filters.patio}
+                  onValueChange={(value) => setFilters({ ...filters, patio: value })}
+                >
+                  <SelectTrigger id="filter-patio" className="bg-input">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Todos</SelectItem>
+                    {patios.map((p) => (
+                      <SelectItem key={p} value={p} className="capitalize">
+                        {p}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="filter-serie" className="text-sm font-medium">
+                  Serie
+                </Label>
+                <Input
+                  id="filter-serie"
+                  placeholder="Buscar serie"
+                  value={filters.serie}
+                  onChange={(e) => setFilters({ ...filters, serie: e.target.value })}
+                  className="bg-input"
+                />
+              </div>
+            </div>
+          )}
+
           {containers.length === 0 ? (
             <p className="text-muted-foreground">
               No hay contenedores registrados.
+            </p>
+          ) : filteredContainers.length === 0 ? (
+            <p className="text-muted-foreground">
+              No se encontraron contenedores con esos filtros.
             </p>
           ) : (
             <div className="overflow-x-auto">
@@ -53,7 +145,7 @@ export default function ContainersPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {containers.map((c, index) => (
+                  {filteredContainers.map((c, index) => (
                     <tr key={index} className="border-b last:border-0">
                       <td className="py-2 px-3 font-medium">{c.serieLetra}{c.numeroSerie}</td>
                       <td className="py-2 px-3 capitalize">{c.tipo}</td>
