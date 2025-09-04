@@ -15,11 +15,16 @@ interface Container {
 
 export function RentalForm() {
   const [containers, setContainers] = useState<Container[]>([])
-  const clients = ["Cliente A", "Cliente B"]
+  interface Client {
+    nombre: string
+  }
+  const [clients, setClients] = useState<Client[]>([])
 
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem("contenedores") || "[]")
     setContainers(stored)
+    const storedClients = JSON.parse(localStorage.getItem("clientes") || "[]")
+    setClients(storedClients)
   }, [])
 
   const [formData, setFormData] = useState({
@@ -90,16 +95,30 @@ export function RentalForm() {
 
         <div className="space-y-2">
           <Label htmlFor="cliente">Cliente</Label>
-          <Select value={formData.cliente} onValueChange={(value) => handleChange("cliente", value)}>
-            <SelectTrigger id="cliente" className="bg-input">
-              <SelectValue placeholder="Seleccionar cliente" />
+          <Select
+            value={formData.cliente}
+            onValueChange={(value) => handleChange("cliente", value)}
+            disabled={clients.length === 0}
+          >
+            <SelectTrigger id="cliente" className="bg-input" disabled={clients.length === 0}>
+              <SelectValue
+                placeholder={
+                  clients.length ? "Seleccionar cliente" : "No hay clientes registrados"
+                }
+              />
             </SelectTrigger>
             <SelectContent>
-              {clients.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
+              {clients.length ? (
+                clients.map((c, index) => (
+                  <SelectItem key={index} value={c.nombre}>
+                    {c.nombre}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="" disabled>
+                  No hay clientes registrados
                 </SelectItem>
-              ))}
+              )}
             </SelectContent>
           </Select>
         </div>
