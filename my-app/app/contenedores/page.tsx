@@ -42,8 +42,8 @@ export default function ContainersPage() {
 
   const filteredContainers = containers.filter((c) => {
     const matchesEstado = !estado || c.estado === estado
-    const matchesTipo = !tipo || c.tipo === tipo
-    const matchesPatio = !patio || c.patio === patio
+    const matchesTipo = tipo === "todos" || !tipo || c.tipo === tipo
+    const matchesPatio = patio === "todos" || !patio || c.patio === patio
     const matchesProveedor =
       !proveedor || c.proveedor?.toLowerCase().includes(proveedor.toLowerCase())
     const serieCompleta = `${c.serieLetra}${c.numeroSerie}`.toLowerCase()
@@ -93,6 +93,7 @@ export default function ContainersPage() {
                 <SelectValue placeholder="Tipo" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
                 <SelectItem value="banos">BAÑOS</SelectItem>
                 <SelectItem value="duchas">DUCHAS</SelectItem>
                 <SelectItem value="oficina">OFICINA</SelectItem>
@@ -112,6 +113,7 @@ export default function ContainersPage() {
                 <SelectValue placeholder="Patio" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
                 <SelectItem value="patio-1">PATIO 1</SelectItem>
                 <SelectItem value="patio-2">PATIO 2</SelectItem>
                 <SelectItem value="patio-3">PATIO 3</SelectItem>
