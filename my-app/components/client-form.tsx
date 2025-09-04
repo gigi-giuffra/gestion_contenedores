@@ -23,7 +23,18 @@ export function ClientForm() {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
-    console.log(formData)
+    const stored = JSON.parse(localStorage.getItem("clientes") || "[]")
+    stored.push(formData)
+    localStorage.setItem("clientes", JSON.stringify(stored))
+    setFormData({
+      nombre: "",
+      tipo: "",
+      documento: "",
+      email: "",
+      telefono: "",
+      contacto: "",
+      ciudad: "",
+    })
   }
 
   return (
