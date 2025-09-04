@@ -121,9 +121,11 @@ export function ContainerManagement() {
               <SelectValue placeholder="Seleccione el patio si el contenedor está disponible, en mantenimiento o en rancho" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="patio-a">Patio A</SelectItem>
-              <SelectItem value="patio-b">Patio B</SelectItem>
-              <SelectItem value="patio-c">Patio C</SelectItem>
+              <SelectItem value="patio-1">PATIO 1</SelectItem>
+              <SelectItem value="patio-2">PATIO 2</SelectItem>
+              <SelectItem value="patio-3">PATIO 3</SelectItem>
+              <SelectItem value="patio-4">PATIO 4</SelectItem>
+              <SelectItem value="patio-5">PATIO 5</SelectItem>
             </SelectContent>
           </Select>
         </div>
