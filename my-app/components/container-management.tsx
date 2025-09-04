@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -23,6 +24,8 @@ export function ContainerManagement() {
     fechaCompra: "",
     notas: "",
   })
+
+  const router = useRouter()
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -48,7 +51,11 @@ export function ContainerManagement() {
       alert("No debe seleccionar un patio cuando el contenedor está Arrendado")
       return
     }
-    console.log("Formulario válido", formData)
+
+    const stored = JSON.parse(localStorage.getItem("contenedores") || "[]")
+    stored.push(formData)
+    localStorage.setItem("contenedores", JSON.stringify(stored))
+    router.push("/contenedores")
   }
 
   return (
