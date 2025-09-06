@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,6 +24,11 @@ export function ContainerManagement() {
     fechaCompra: "",
     notas: "",
   })
+
+  const [declaracionFile, setDeclaracionFile] = useState<File | null>(null)
+  const [facturaFile, setFacturaFile] = useState<File | null>(null)
+  const declaracionInputRef = useRef<HTMLInputElement>(null)
+  const facturaInputRef = useRef<HTMLInputElement>(null)
 
   const router = useRouter()
 
@@ -218,12 +223,27 @@ export function ContainerManagement() {
 
           <div className="space-y-2">
             <Label className="text-sm font-medium">Declaración de Importación (PDF)</Label>
+            <input
+              type="file"
+              accept="application/pdf"
+              ref={declaracionInputRef}
+              onChange={(e) => setDeclaracionFile(e.target.files?.[0] || null)}
+              className="hidden"
+            />
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2 bg-transparent"
+                onClick={() => declaracionInputRef.current?.click()}
+              >
                 <Upload className="h-4 w-4" />
                 Seleccionar archivo
               </Button>
-              <span className="text-sm text-muted-foreground">Sin archivos seleccionados</span>
+              <span className="text-sm text-muted-foreground">
+                {declaracionFile ? declaracionFile.name : "Sin archivos seleccionados"}
+              </span>
             </div>
             <p className="text-xs text-muted-foreground">Subir la Declaración de Importación en PDF</p>
           </div>
@@ -250,12 +270,27 @@ export function ContainerManagement() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label className="text-sm font-medium">Ingresar factura (PDF)</Label>
+            <input
+              type="file"
+              accept="application/pdf"
+              ref={facturaInputRef}
+              onChange={(e) => setFacturaFile(e.target.files?.[0] || null)}
+              className="hidden"
+            />
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2 bg-transparent"
+                onClick={() => facturaInputRef.current?.click()}
+              >
                 <Upload className="h-4 w-4" />
                 Seleccionar archivo
               </Button>
-              <span className="text-sm text-muted-foreground">Sin archivos seleccionados</span>
+              <span className="text-sm text-muted-foreground">
+                {facturaFile ? facturaFile.name : "Sin archivos seleccionados"}
+              </span>
             </div>
             <p className="text-xs text-muted-foreground">Subir factura de compra en formato PDF</p>
           </div>
