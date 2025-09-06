@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -35,13 +35,48 @@ export function RentalForm() {
     fechaRetiro: "",
   })
 
+  const [invoiceName, setInvoiceName] = useState("")
+  const [invoiceData, setInvoiceData] = useState("")
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    setInvoiceName(file.name)
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result as string
+      setInvoiceData(result)
+    }
+    reader.readAsDataURL(file)
+  }
+
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
-    console.log("Nuevo arriendo", formData)
+
+    const newRental = {
+      ...formData,
+      facturaNombre: invoiceName,
+      facturaArchivo: invoiceData,
+    }
+    const storedRentals = JSON.parse(localStorage.getItem("arriendos") || "[]")
+    storedRentals.push(newRental)
+    localStorage.setItem("arriendos", JSON.stringify(storedRentals))
+
+    // Update container status to Arrendado
+    const updatedContainers = containers.map((c) => {
+      const serie = `${c.serieLetra}${c.numeroSerie}`
+      if (serie === formData.contenedor) {
+        return { ...c, estado: "Arrendado" }
+      }
+      return c
+    })
+    localStorage.setItem("contenedores", JSON.stringify(updatedContainers))
+    alert("Arriendo guardado correctamente")
   }
 
   return (
@@ -164,12 +199,27 @@ export function RentalForm() {
 
       <div className="space-y-2">
         <Label className="text-sm font-medium">Ingresar factura (PDF)</Label>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/pdf"
+          className="hidden"
+          onChange={handleFileChange}
+        />
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2 bg-transparent"
+            onClick={() => fileInputRef.current?.click()}
+          >
             <Upload className="h-4 w-4" />
             Seleccionar archivo
           </Button>
-          <span className="text-sm text-muted-foreground">Sin archivos seleccionados</span>
+          <span className="text-sm text-muted-foreground">
+            {invoiceName || "Sin archivos seleccionados"}
+          </span>
         </div>
         <p className="text-xs text-muted-foreground">Subir factura en formato PDF</p>
       </div>
