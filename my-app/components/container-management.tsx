@@ -87,7 +87,10 @@ export function ContainerManagement() {
             id="serie-letra"
             placeholder="Prefijo letras del contenedor (p. ej. AB)"
             value={formData.serieLetra}
-            onChange={(e) => handleInputChange("serieLetra", e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^a-zA-Z]/g, "").toUpperCase()
+              handleInputChange("serieLetra", value)
+            }}
             className="bg-input"
           />
         </div>
