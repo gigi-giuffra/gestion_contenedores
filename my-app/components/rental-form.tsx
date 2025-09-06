@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -29,6 +29,9 @@ export function RentalForm() {
     codigoGuia: "",
     fechaRetiro: "",
   })
+
+  const [facturaFile, setFacturaFile] = useState<File | null>(null)
+  const facturaInputRef = useRef<HTMLInputElement>(null)
 
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -145,12 +148,27 @@ export function RentalForm() {
 
       <div className="space-y-2">
         <Label className="text-sm font-medium">Ingresar factura (PDF)</Label>
+        <input
+          type="file"
+          accept="application/pdf"
+          ref={facturaInputRef}
+          onChange={(e) => setFacturaFile(e.target.files?.[0] || null)}
+          className="hidden"
+        />
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2 bg-transparent"
+            onClick={() => facturaInputRef.current?.click()}
+          >
             <Upload className="h-4 w-4" />
             Seleccionar archivo
           </Button>
-          <span className="text-sm text-muted-foreground">Sin archivos seleccionados</span>
+          <span className="text-sm text-muted-foreground">
+            {facturaFile ? facturaFile.name : "Sin archivos seleccionados"}
+          </span>
         </div>
         <p className="text-xs text-muted-foreground">Subir factura en formato PDF</p>
       </div>
