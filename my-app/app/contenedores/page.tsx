@@ -12,6 +12,11 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
+interface FileData {
+  name: string
+  data: string
+}
+
 interface Container {
   serieLetra: string
   numeroSerie: string
@@ -23,6 +28,8 @@ interface Container {
   fechaDeclaracion: string
   fechaCompra: string
   notas: string
+  facturaPDF?: FileData | null
+  declaracionPDF?: FileData | null
 }
 
 export default function ContainersPage() {
@@ -156,6 +163,8 @@ export default function ContainersPage() {
                     <th className="py-2 px-3 text-left">Nº Declaración</th>
                     <th className="py-2 px-3 text-left">Fecha Declaración</th>
                     <th className="py-2 px-3 text-left">Fecha Compra</th>
+                    <th className="py-2 px-3 text-left">Factura PDF</th>
+                    <th className="py-2 px-3 text-left">Declaración PDF</th>
                     <th className="py-2 px-3 text-left">Notas</th>
                   </tr>
                 </thead>
@@ -170,6 +179,34 @@ export default function ContainersPage() {
                       <td className="py-2 px-3">{c.numeroDeclaracion || "-"}</td>
                       <td className="py-2 px-3">{c.fechaDeclaracion || "-"}</td>
                       <td className="py-2 px-3">{c.fechaCompra || "-"}</td>
+                      <td className="py-2 px-3">
+                        {c.facturaPDF ? (
+                          <a
+                            href={c.facturaPDF.data}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary underline"
+                          >
+                            Ver
+                          </a>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
+                      <td className="py-2 px-3">
+                        {c.declaracionPDF ? (
+                          <a
+                            href={c.declaracionPDF.data}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary underline"
+                          >
+                            Ver
+                          </a>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
                       <td className="py-2 px-3 max-w-[200px] truncate">{c.notas || "-"}</td>
                     </tr>
                   ))}
