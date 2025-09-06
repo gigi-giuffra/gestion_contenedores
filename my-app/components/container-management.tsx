@@ -47,9 +47,12 @@ export function ContainerManagement() {
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
     const { estado, patio } = formData
-    const requiresPatio = estado === "Disponible" || estado === "Mantenimiento"
+    const requiresPatio =
+      estado === "Disponible" || estado === "Mantenimiento" || estado === "Rancho"
     if (requiresPatio && !patio) {
-      alert("Debe seleccionar un patio cuando el contenedor está Disponible o en Mantenimiento")
+      alert(
+        "Debe seleccionar un patio cuando el contenedor está Disponible, en Mantenimiento o en Rancho",
+      )
       return
     }
     if (estado === "Arrendado" && patio) {
@@ -142,6 +145,7 @@ export function ContainerManagement() {
               <SelectItem value="Disponible">Disponible</SelectItem>
               <SelectItem value="Arrendado">Arrendado</SelectItem>
               <SelectItem value="Mantenimiento">Mantenimiento</SelectItem>
+              <SelectItem value="Rancho">Rancho</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -157,7 +161,7 @@ export function ContainerManagement() {
             disabled={formData.estado === "Arrendado"}
           >
             <SelectTrigger className="bg-input" disabled={formData.estado === "Arrendado"}>
-              <SelectValue placeholder="Seleccione el patio si el contenedor está disponible o en mantenimiento" />
+              <SelectValue placeholder="Seleccione el patio si el contenedor está disponible, en mantenimiento o en Rancho" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="patio-1">PATIO 1</SelectItem>

@@ -87,6 +87,7 @@ export default function ContainersPage() {
                 <SelectItem value="Disponible">Disponible</SelectItem>
                 <SelectItem value="Arrendado">Arrendado</SelectItem>
                 <SelectItem value="Mantenimiento">Mantenimiento</SelectItem>
+                <SelectItem value="Rancho">Rancho</SelectItem>
               </SelectContent>
             </Select>
             <Select value={tipo} onValueChange={setTipo}>
