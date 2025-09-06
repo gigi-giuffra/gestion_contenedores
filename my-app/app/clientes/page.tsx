@@ -1,8 +1,9 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Users } from "lucide-react"
-import { promises as fs } from "fs"
-import path from "path"
 
 type Cliente = {
   id: number
@@ -15,12 +16,15 @@ type Cliente = {
   ciudad: string
 }
 
-export const dynamic = "force-dynamic"
+export default function ClientesPage() {
+  const [clientes, setClientes] = useState<Cliente[]>([])
 
-export default async function ClientesPage() {
-  const filePath = path.join(process.cwd(), "data", "clientes.json")
-  const data = await fs.readFile(filePath, "utf-8")
-  const clientes: Cliente[] = JSON.parse(data)
+  useEffect(() => {
+    const stored = localStorage.getItem("clientes")
+    if (stored) {
+      setClientes(JSON.parse(stored))
+    }
+  }, [])
 
   return (
     <DashboardLayout breadcrumbs={["Clientes"]}>
