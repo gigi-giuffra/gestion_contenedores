@@ -41,7 +41,7 @@ export default function ContainersPage() {
   }, [])
 
   const filteredContainers = containers.filter((c) => {
-    const matchesEstado = !estado || c.estado === estado
+    const matchesEstado = estado === "todos" || !estado || c.estado === estado
     const matchesTipo = tipo === "todos" || !tipo || c.tipo === tipo
     const matchesPatio = patio === "todos" || !patio || c.patio === patio
     const matchesProveedor =
@@ -83,6 +83,7 @@ export default function ContainersPage() {
                 <SelectValue placeholder="Estado" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
                 <SelectItem value="Disponible">Disponible</SelectItem>
                 <SelectItem value="Arrendado">Arrendado</SelectItem>
                 <SelectItem value="Mantenimiento">Mantenimiento</SelectItem>
