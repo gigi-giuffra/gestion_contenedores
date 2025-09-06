@@ -24,13 +24,11 @@ export function ClientForm() {
 
   const router = useRouter()
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
-    await fetch("/api/clientes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    })
+    const existing = JSON.parse(localStorage.getItem("clientes") || "[]")
+    const newClient = { id: Date.now(), ...formData }
+    localStorage.setItem("clientes", JSON.stringify([...existing, newClient]))
     router.push("/clientes")
   }
 
