@@ -11,28 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Calendar, Upload, Container, FileText } from "lucide-react"
 
-interface FileData {
-  name: string
-  data: string
-}
-
-interface ContainerFormData {
-  serieLetra: string
-  numeroSerie: string
-  tipo: string
-  estado: string
-  patio: string
-  proveedor: string
-  numeroDeclaracion: string
-  fechaDeclaracion: string
-  fechaCompra: string
-  notas: string
-  facturaPDF: FileData | null
-  declaracionPDF: FileData | null
-}
-
 export function ContainerManagement() {
-  const [formData, setFormData] = useState<ContainerFormData>({
+  const [formData, setFormData] = useState({
     serieLetra: "",
     numeroSerie: "",
     tipo: "",
@@ -43,8 +23,6 @@ export function ContainerManagement() {
     fechaDeclaracion: "",
     fechaCompra: "",
     notas: "",
-    facturaPDF: null,
-    declaracionPDF: null,
   })
 
   const router = useRouter()
@@ -59,24 +37,6 @@ export function ContainerManagement() {
       estado: value,
       patio: value === "Arrendado" ? "" : prev.patio,
     }))
-  }
-
-  const handleFileChange = (
-    field: "facturaPDF" | "declaracionPDF",
-    file: File | null,
-  ) => {
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = () => {
-        setFormData((prev) => ({
-          ...prev,
-          [field]: { name: file.name, data: reader.result as string },
-        }))
-      }
-      reader.readAsDataURL(file)
-    } else {
-      setFormData((prev) => ({ ...prev, [field]: null }))
-    }
   }
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -259,45 +219,13 @@ export function ContainerManagement() {
           <div className="space-y-2">
             <Label className="text-sm font-medium">Declaración de Importación (PDF)</Label>
             <div className="flex items-center gap-2">
-              <Input
-                id="declaracion-pdf"
-                type="file"
-                accept="application/pdf"
-                onChange={(e) =>
-                  handleFileChange(
-                    "declaracionPDF",
-                    e.target.files?.[0] || null,
-                  )
-                }
-                className="hidden"
-              />
-              <Label htmlFor="declaracion-pdf">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2 bg-transparent"
-                >
-                  <Upload className="h-4 w-4" />
-                  Seleccionar archivo
-                </Button>
-              </Label>
-              <span className="text-sm text-muted-foreground">
-                {formData.declaracionPDF?.name || "Sin archivos seleccionados"}
-              </span>
+              <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent">
+                <Upload className="h-4 w-4" />
+                Seleccionar archivo
+              </Button>
+              <span className="text-sm text-muted-foreground">Sin archivos seleccionados</span>
             </div>
-            {formData.declaracionPDF && (
-              <a
-                href={formData.declaracionPDF.data}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-primary underline"
-              >
-                Ver archivo
-              </a>
-            )}
-            <p className="text-xs text-muted-foreground">
-              Subir la Declaración de Importación en PDF
-            </p>
+            <p className="text-xs text-muted-foreground">Subir la Declaración de Importación en PDF</p>
           </div>
 
           <div className="space-y-2">
@@ -314,50 +242,48 @@ export function ContainerManagement() {
               />
               <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             </div>
-            <p className="text-xs text-muted-foreground">
-              Fecha en que se compró el contenedor
-            </p>
+            <p className="text-xs text-muted-foreground">Fecha en que se compró el contenedor</p>
           </div>
+        </div>
 
+        {/* File Upload Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label className="text-sm font-medium">Ingresar factura (PDF)</Label>
             <div className="flex items-center gap-2">
-              <Input
-                id="factura-pdf"
-                type="file"
-                accept="application/pdf"
-                onChange={(e) =>
-                  handleFileChange("facturaPDF", e.target.files?.[0] || null)
-                }
-                className="hidden"
-              />
-              <Label htmlFor="factura-pdf">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2 bg-transparent"
-                >
-                  <Upload className="h-4 w-4" />
-                  Seleccionar archivo
-                </Button>
-              </Label>
-              <span className="text-sm text-muted-foreground">
-                {formData.facturaPDF?.name || "Sin archivos seleccionados"}
-              </span>
+              <Button variant="outline" size="sm" className="flex items-center gap-2 bg-transparent">
+                <Upload className="h-4 w-4" />
+                Seleccionar archivo
+              </Button>
+              <span className="text-sm text-muted-foreground">Sin archivos seleccionados</span>
             </div>
-            {formData.facturaPDF && (
-              <a
-                href={formData.facturaPDF.data}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-primary underline"
-              >
-                Ver archivo
-              </a>
-            )}
-            <p className="text-xs text-muted-foreground">
-              Subir factura de compra en formato PDF
-            </p>
+            <p className="text-xs text-muted-foreground">Subir factura de compra en formato PDF</p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Factura PDF</Label>
+              <Select>
+                <SelectTrigger className="bg-input">
+                  <SelectValue placeholder="---------" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sin archivo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Declaración PDF</Label>
+              <Select>
+                <SelectTrigger className="bg-input">
+                  <SelectValue placeholder="---------" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sin archivo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </div>
