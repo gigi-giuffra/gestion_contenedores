@@ -112,7 +112,7 @@ export function ContainerManagement() {
             Tipo
           </Label>
           <Select value={formData.tipo} onValueChange={(value) => handleInputChange("tipo", value)}>
-            <SelectTrigger className="bg-input">
+            <SelectTrigger className="bg-input w-full">
               <SelectValue placeholder="Seleccione el tipo del contenedor" />
             </SelectTrigger>
             <SelectContent>
@@ -138,7 +138,7 @@ export function ContainerManagement() {
             Estado
           </Label>
           <Select value={formData.estado} onValueChange={handleEstadoChange}>
-            <SelectTrigger className="bg-input">
+            <SelectTrigger className="bg-input w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -160,8 +160,8 @@ export function ContainerManagement() {
             onValueChange={(value) => handleInputChange("patio", value)}
             disabled={formData.estado === "Arrendado"}
           >
-            <SelectTrigger className="bg-input" disabled={formData.estado === "Arrendado"}>
-              <SelectValue placeholder="Seleccione el patio si el contenedor está disponible, en mantenimiento o en Rancho" />
+            <SelectTrigger className="bg-input w-full" disabled={formData.estado === "Arrendado"}>
+              <SelectValue placeholder="Seleccione un patio (si aplica)" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="patio-1">PATIO 1</SelectItem>
@@ -171,6 +171,9 @@ export function ContainerManagement() {
               <SelectItem value="patio-5">PATIO 5</SelectItem>
             </SelectContent>
           </Select>
+          <p className="text-xs text-muted-foreground">
+            Requerido cuando el contenedor está Disponible, en Mantenimiento o en Rancho
+          </p>
         </div>
 
         {/* Proveedor */}
@@ -303,7 +306,7 @@ export function ContainerManagement() {
             <div className="space-y-2">
               <Label className="text-sm font-medium">Factura PDF</Label>
               <Select>
-                <SelectTrigger className="bg-input">
+              <SelectTrigger className="bg-input w-full">
                   <SelectValue placeholder="---------" />
                 </SelectTrigger>
                 <SelectContent>
@@ -315,7 +318,7 @@ export function ContainerManagement() {
             <div className="space-y-2">
               <Label className="text-sm font-medium">Declaración PDF</Label>
               <Select>
-                <SelectTrigger className="bg-input">
+              <SelectTrigger className="bg-input w-full">
                   <SelectValue placeholder="---------" />
                 </SelectTrigger>
                 <SelectContent>
