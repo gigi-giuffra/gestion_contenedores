@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -21,9 +22,16 @@ export function ClientForm() {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const router = useRouter()
+
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
-    console.log(formData)
+    await fetch("/api/clientes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    })
+    router.push("/clientes")
   }
 
   return (
