@@ -18,8 +18,15 @@ export function RentalForm() {
   const clients = ["Cliente A", "Cliente B"]
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("contenedores") || "[]")
-    setContainers(stored)
+    try {
+      const stored = JSON.parse(localStorage.getItem("contenedores") || "[]")
+      setContainers(stored)
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        alert("Error al leer los contenedores almacenados.")
+        setContainers([])
+      }
+    }
   }, [])
 
   const [formData, setFormData] = useState({

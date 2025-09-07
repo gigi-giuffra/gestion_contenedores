@@ -36,8 +36,15 @@ export default function ContainersPage() {
   const [busquedaSerie, setBusquedaSerie] = useState("")
 
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("contenedores") || "[]")
-    setContainers(stored)
+    try {
+      const stored = JSON.parse(localStorage.getItem("contenedores") || "[]")
+      setContainers(stored)
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        alert("Los datos de contenedores están corruptos. Se mostrará una lista vacía.")
+        setContainers([])
+      }
+    }
   }, [])
 
   const filteredContainers = containers.filter((c) => {
