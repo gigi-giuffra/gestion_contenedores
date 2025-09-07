@@ -11,8 +11,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Calendar, Upload, Container, FileText } from "lucide-react"
 
+interface ContainerFormData {
+  serieLetra: string
+  numeroSerie: string
+  tipo: string
+  estado: string
+  patio: string
+  proveedor: string
+  numeroDeclaracion: string
+  fechaDeclaracion: string
+  fechaCompra: string
+  notas: string
+}
+
 export function ContainerManagement() {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ContainerFormData>({
     serieLetra: "",
     numeroSerie: "",
     tipo: "",
@@ -60,7 +73,17 @@ export function ContainerManagement() {
       return
     }
 
-    const stored = JSON.parse(localStorage.getItem("contenedores") || "[]")
+    let stored: ContainerFormData[] = []
+    try {
+      stored = JSON.parse(localStorage.getItem("contenedores") || "[]")
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        alert(
+          "Los datos de contenedores están corruptos. Se reiniciará el registro.",
+        )
+        stored = []
+      }
+    }
     stored.push(formData)
     localStorage.setItem("contenedores", JSON.stringify(stored))
     router.push("/contenedores")
