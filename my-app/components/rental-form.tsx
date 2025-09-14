@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useRef } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,11 +12,22 @@ interface Container {
   serieLetra: string
   numeroSerie: string
   estado: string
+  patio?: string
+}
+
+interface RentalData {
+  contenedor: string
+  cliente: string
+  fechaEntrega: string
+  codigoGuia: string
+  fechaRetiro: string
+  facturaPdf?: string
 }
 
 export function RentalForm() {
   const [containers, setContainers] = useState<Container[]>([])
   const clients = ["Cliente A", "Cliente B"]
+  const router = useRouter()
 
   useEffect(() => {
     try {
@@ -34,7 +46,7 @@ export function RentalForm() {
     }
   }, [])
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<RentalData>({
     contenedor: "",
     cliente: "",
     fechaEntrega: "",
@@ -45,13 +57,59 @@ export function RentalForm() {
   const [facturaFile, setFacturaFile] = useState<File | null>(null)
   const facturaInputRef = useRef<HTMLInputElement>(null)
 
+  const readFileAsDataURL = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+  }
+
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
-    console.log("Nuevo arriendo", formData)
+    if (!formData.contenedor || !formData.cliente) {
+      alert("Debe seleccionar contenedor y cliente")
+      return
+    }
+
+    const newRental: RentalData = { ...formData }
+    if (facturaFile) {
+      newRental.facturaPdf = await readFileAsDataURL(facturaFile)
+    }
+
+    let rentals: RentalData[] = []
+    try {
+      const parsed = JSON.parse(localStorage.getItem("arriendos") || "[]")
+      if (Array.isArray(parsed)) {
+        rentals = parsed as RentalData[]
+      }
+    } catch {
+      rentals = []
+    }
+    rentals.push(newRental)
+    localStorage.setItem("arriendos", JSON.stringify(rentals))
+
+    try {
+      const parsed = JSON.parse(localStorage.getItem("contenedores") || "[]")
+      if (Array.isArray(parsed)) {
+        const containersStored = parsed as Container[]
+        const idx = containersStored.findIndex(
+          (c) => `${c.serieLetra}${c.numeroSerie}` === formData.contenedor,
+        )
+        if (idx !== -1) {
+          containersStored[idx].estado = "Arrendado"
+          containersStored[idx].patio = ""
+          localStorage.setItem("contenedores", JSON.stringify(containersStored))
+        }
+      }
+    } catch {}
+
+    router.push("/arriendos")
   }
 
   return (
