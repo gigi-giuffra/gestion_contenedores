@@ -39,18 +39,28 @@ export default function ClientesPage() {
         </CardHeader>
         <CardContent>
           {clientes.length ? (
-            <ul className="space-y-2">
-              {clientes.map((c: Cliente, index) => (
-                <li key={c.id} className="border-b pb-2">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium">{c.nombre}</span> - {c.tipo}
-                    <Link href={`/clientes/${index}`}>
-                      <Button variant="outline" size="sm">Modificar</Button>
-                    </Link>
-                  </div>
-                </li>
-              ))}
-            </ul>
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2">Nombre</th>
+                  <th className="text-left py-2">Tipo de Cliente</th>
+                  <th className="text-right py-2">&nbsp;</th>
+                </tr>
+              </thead>
+              <tbody>
+                {clientes.map((c: Cliente, index) => (
+                  <tr key={c.id} className="border-b last:border-b-0">
+                    <td className="py-2 font-medium">{c.nombre}</td>
+                    <td className="py-2">{c.tipo}</td>
+                    <td className="py-2 text-right">
+                      <Link href={`/clientes/${index}`}>
+                        <Button variant="outline" size="sm">Modificar</Button>
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           ) : (
             <p className="text-muted-foreground">No hay clientes registrados.</p>
           )}
