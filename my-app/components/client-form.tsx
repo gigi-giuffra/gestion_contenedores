@@ -7,15 +7,31 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 
-export function ClientForm() {
+interface Cliente {
+  id: number
+  nombre: string
+  tipo: string
+  documento: string
+  email: string
+  telefono: string
+  contacto: string
+  ciudad: string
+}
+
+interface ClientFormProps {
+  initialData?: Cliente
+  index?: number
+}
+
+export function ClientForm({ initialData, index }: ClientFormProps) {
   const [formData, setFormData] = useState({
-    nombre: "",
-    tipo: "",
-    documento: "",
-    email: "",
-    telefono: "",
-    contacto: "",
-    ciudad: "",
+    nombre: initialData?.nombre || "",
+    tipo: initialData?.tipo || "",
+    documento: initialData?.documento || "",
+    email: initialData?.email || "",
+    telefono: initialData?.telefono || "",
+    contacto: initialData?.contacto || "",
+    ciudad: initialData?.ciudad || "",
   })
 
   const handleChange = (field: string, value: string) => {
@@ -27,10 +43,27 @@ export function ClientForm() {
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
     const existing = JSON.parse(localStorage.getItem("clientes") || "[]")
-    const newClient = { id: Date.now(), ...formData }
-    localStorage.setItem("clientes", JSON.stringify([...existing, newClient]))
+    if (typeof index === "number" && initialData) {
+      existing[index] = { id: initialData.id, ...formData }
+    } else {
+      const newClient = { id: Date.now(), ...formData }
+      existing.push(newClient)
+    }
+    localStorage.setItem("clientes", JSON.stringify(existing))
     router.push("/clientes")
   }
+
+  const handleDelete = () => {
+    if (typeof index !== "number") return
+    if (confirm("¿Está seguro de eliminar este cliente?")) {
+      const existing = JSON.parse(localStorage.getItem("clientes") || "[]")
+      existing.splice(index, 1)
+      localStorage.setItem("clientes", JSON.stringify(existing))
+      router.push("/clientes")
+    }
+  }
+
+  const isEditing = typeof index === "number" && !!initialData
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -110,9 +143,20 @@ export function ClientForm() {
         </div>
       </div>
 
-      <Button type="submit" className="bg-primary hover:bg-primary/90">
-        Guardar
-      </Button>
+      <div className="flex gap-3">
+        <Button type="submit" className="bg-primary hover:bg-primary/90">
+          Guardar
+        </Button>
+        {isEditing && (
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={handleDelete}
+          >
+            Eliminar
+          </Button>
+        )}
+      </div>
     </form>
   )
 }
