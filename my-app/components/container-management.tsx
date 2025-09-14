@@ -75,14 +75,22 @@ export function ContainerManagement() {
 
     let stored: ContainerFormData[] = []
     try {
-      stored = JSON.parse(localStorage.getItem("contenedores") || "[]")
-    } catch (error) {
-      if (error instanceof SyntaxError) {
+      const parsed = JSON.parse(localStorage.getItem("contenedores") || "[]")
+      if (Array.isArray(parsed)) {
+        stored = parsed
+      } else {
         alert(
           "Los datos de contenedores están corruptos. Se reiniciará el registro.",
         )
         stored = []
       }
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        alert(
+          "Los datos de contenedores están corruptos. Se reiniciará el registro.",
+        )
+      }
+      stored = []
     }
     stored.push(formData)
     localStorage.setItem("contenedores", JSON.stringify(stored))

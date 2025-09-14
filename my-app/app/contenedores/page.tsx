@@ -38,12 +38,17 @@ export default function ContainersPage() {
   useEffect(() => {
     try {
       const stored = JSON.parse(localStorage.getItem("contenedores") || "[]")
-      setContainers(stored)
-    } catch (error) {
-      if (error instanceof SyntaxError) {
+      if (Array.isArray(stored)) {
+        setContainers(stored)
+      } else {
         alert("Los datos de contenedores están corruptos. Se mostrará una lista vacía.")
         setContainers([])
       }
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        alert("Los datos de contenedores están corruptos. Se mostrará una lista vacía.")
+      }
+      setContainers([])
     }
   }, [])
 
