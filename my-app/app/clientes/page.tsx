@@ -4,6 +4,8 @@ import { useEffect, useState } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Users } from "lucide-react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 
 type Cliente = {
   id: number
@@ -38,9 +40,14 @@ export default function ClientesPage() {
         <CardContent>
           {clientes.length ? (
             <ul className="space-y-2">
-              {clientes.map((c: Cliente) => (
+              {clientes.map((c: Cliente, index) => (
                 <li key={c.id} className="border-b pb-2">
-                  <span className="font-medium">{c.nombre}</span> - {c.tipo}
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{c.nombre}</span> - {c.tipo}
+                    <Link href={`/clientes/${index}`}>
+                      <Button variant="outline" size="sm">Modificar</Button>
+                    </Link>
+                  </div>
                 </li>
               ))}
             </ul>
