@@ -16,6 +16,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Calendar, Upload, Container, FileText } from "lucide-react"
+import { downloadFile } from "@/lib/utils"
 
 export interface ContainerFormData {
   serieLetra: string
@@ -408,14 +409,12 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
             <div className="space-y-2">
               <Label className="text-sm font-medium">Factura PDF</Label>
               {formData.facturaPdf ? (
-                <a
-                  href={formData.facturaPdf}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  onClick={() => downloadFile(formData.facturaPdf as string)}
                   className="text-sm text-primary underline"
                 >
                   Ver PDF
-                </a>
+                </button>
               ) : (
                 <p className="text-sm text-muted-foreground">---------</p>
               )}
@@ -424,14 +423,12 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
             <div className="space-y-2">
               <Label className="text-sm font-medium">Declaración PDF</Label>
               {formData.declaracionPdf ? (
-                <a
-                  href={formData.declaracionPdf}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  onClick={() => downloadFile(formData.declaracionPdf as string)}
                   className="text-sm text-primary underline"
                 >
                   Ver PDF
-                </a>
+                </button>
               ) : (
                 <p className="text-sm text-muted-foreground">---------</p>
               )}
