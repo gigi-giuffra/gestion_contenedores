@@ -25,6 +25,8 @@ interface Container {
   fechaDeclaracion: string
   fechaCompra: string
   notas: string
+  declaracionPdf?: string
+  facturaPdf?: string
 }
 
 export default function ContainersPage() {
@@ -171,6 +173,8 @@ export default function ContainersPage() {
                     <th className="py-2 px-3 text-left">Nº Declaración</th>
                     <th className="py-2 px-3 text-left">Fecha Declaración</th>
                     <th className="py-2 px-3 text-left">Fecha Compra</th>
+                    <th className="py-2 px-3 text-left">PDF D.I</th>
+                    <th className="py-2 px-3 text-left">PDF Factura</th>
                     <th className="py-2 px-3 text-left">Notas</th>
                     <th className="py-2 px-3 text-left">Acciones</th>
                   </tr>
@@ -186,6 +190,34 @@ export default function ContainersPage() {
                       <td className="py-2 px-3">{c.numeroDeclaracion || "-"}</td>
                       <td className="py-2 px-3">{c.fechaDeclaracion || "-"}</td>
                       <td className="py-2 px-3">{c.fechaCompra || "-"}</td>
+                      <td className="py-2 px-3">
+                        {c.declaracionPdf ? (
+                          <a
+                            href={c.declaracionPdf}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary underline"
+                          >
+                            Ver
+                          </a>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
+                      <td className="py-2 px-3">
+                        {c.facturaPdf ? (
+                          <a
+                            href={c.facturaPdf}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary underline"
+                          >
+                            Ver
+                          </a>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
                       <td className="py-2 px-3 max-w-[200px] truncate">{c.notas || "-"}</td>
                       <td className="py-2 px-3">
                         <Link href={`/contenedores/${index}`}>
