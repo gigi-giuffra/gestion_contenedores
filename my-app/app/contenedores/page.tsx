@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { downloadFile } from "@/lib/utils"
 
 interface Container {
   serieLetra: string
@@ -192,28 +193,36 @@ export default function ContainersPage() {
                       <td className="py-2 px-3">{c.fechaCompra || "-"}</td>
                       <td className="py-2 px-3">
                         {c.declaracionPdf ? (
-                          <a
-                            href={c.declaracionPdf}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            type="button"
+                            onClick={() =>
+                              downloadFile(
+                                c.declaracionPdf,
+                                `${c.serieLetra}${c.numeroSerie}_declaracion.pdf`,
+                              )
+                            }
                             className="text-primary underline"
                           >
                             Ver
-                          </a>
+                          </button>
                         ) : (
                           "-"
                         )}
                       </td>
                       <td className="py-2 px-3">
                         {c.facturaPdf ? (
-                          <a
-                            href={c.facturaPdf}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            type="button"
+                            onClick={() =>
+                              downloadFile(
+                                c.facturaPdf,
+                                `${c.serieLetra}${c.numeroSerie}_factura.pdf`,
+                              )
+                            }
                             className="text-primary underline"
                           >
                             Ver
-                          </a>
+                          </button>
                         ) : (
                           "-"
                         )}
