@@ -21,7 +21,7 @@ interface RentalData {
   fechaEntrega: string
   codigoGuia: string
   fechaRetiro: string
-  facturaPdf?: string
+  guiaPdf?: string
 }
 
 export function RentalForm() {
@@ -54,8 +54,8 @@ export function RentalForm() {
     fechaRetiro: "",
   })
 
-  const [facturaFile, setFacturaFile] = useState<File | null>(null)
-  const facturaInputRef = useRef<HTMLInputElement>(null)
+  const [guiaFile, setGuiaFile] = useState<File | null>(null)
+  const guiaInputRef = useRef<HTMLInputElement>(null)
 
   const readFileAsDataURL = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -78,8 +78,8 @@ export function RentalForm() {
     }
 
     const newRental: RentalData = { ...formData }
-    if (facturaFile) {
-      newRental.facturaPdf = await readFileAsDataURL(facturaFile)
+    if (guiaFile) {
+      newRental.guiaPdf = await readFileAsDataURL(guiaFile)
     }
 
     let rentals: RentalData[] = []
@@ -221,8 +221,8 @@ export function RentalForm() {
         <input
           type="file"
           accept="application/pdf"
-          ref={facturaInputRef}
-          onChange={(e) => setFacturaFile(e.target.files?.[0] || null)}
+          ref={guiaInputRef}
+          onChange={(e) => setGuiaFile(e.target.files?.[0] || null)}
           className="hidden"
         />
         <div className="flex items-center gap-2">
@@ -231,13 +231,13 @@ export function RentalForm() {
             variant="outline"
             size="sm"
             className="flex items-center gap-2 bg-transparent"
-            onClick={() => facturaInputRef.current?.click()}
+            onClick={() => guiaInputRef.current?.click()}
           >
             <Upload className="h-4 w-4" />
             Seleccionar archivo
           </Button>
           <span className="text-sm text-muted-foreground">
-            {facturaFile ? facturaFile.name : "Sin archivos seleccionados"}
+            {guiaFile ? guiaFile.name : "Sin archivos seleccionados"}
           </span>
         </div>
         <p className="text-xs text-muted-foreground">Subir guía de despacho en formato PDF</p>
