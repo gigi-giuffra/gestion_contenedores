@@ -28,6 +28,8 @@ export interface ContainerFormData {
   fechaDeclaracion: string
   fechaCompra: string
   notas: string
+  declaracionPdf?: string
+  facturaPdf?: string
 }
 
 interface ContainerManagementProps {
@@ -48,6 +50,8 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
       fechaDeclaracion: "",
       fechaCompra: "",
       notas: "",
+      declaracionPdf: "",
+      facturaPdf: "",
     },
   )
 
@@ -71,7 +75,16 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
     }))
   }
 
-  const handleSubmit = (event: React.FormEvent) => {
+  const readFileAsDataURL = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+  }
+
+  const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     const { estado, patio } = formData
     const requiresPatio =
@@ -85,6 +98,14 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
     if (estado === "Arrendado" && patio) {
       alert("No debe seleccionar un patio cuando el contenedor está Arrendado")
       return
+    }
+
+    const updatedData = { ...formData }
+    if (declaracionFile) {
+      updatedData.declaracionPdf = await readFileAsDataURL(declaracionFile)
+    }
+    if (facturaFile) {
+      updatedData.facturaPdf = await readFileAsDataURL(facturaFile)
     }
 
     let stored: ContainerFormData[] = []
@@ -108,9 +129,9 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
     }
 
     if (isEditing && typeof index === "number") {
-      stored[index] = formData
+      stored[index] = updatedData
     } else {
-      stored.push(formData)
+      stored.push(updatedData)
     }
     localStorage.setItem("contenedores", JSON.stringify(stored))
     router.push("/contenedores")
@@ -322,7 +343,11 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
                 Seleccionar archivo
               </Button>
               <span className="text-sm text-muted-foreground">
-                {declaracionFile ? declaracionFile.name : "Sin archivos seleccionados"}
+                {declaracionFile
+                  ? declaracionFile.name
+                  : formData.declaracionPdf
+                  ? "Archivo guardado"
+                  : "Sin archivos seleccionados"}
               </span>
             </div>
             <p className="text-xs text-muted-foreground">Subir la Declaración de Importación en PDF</p>
@@ -369,7 +394,11 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
                 Seleccionar archivo
               </Button>
               <span className="text-sm text-muted-foreground">
-                {facturaFile ? facturaFile.name : "Sin archivos seleccionados"}
+                {facturaFile
+                  ? facturaFile.name
+                  : formData.facturaPdf
+                  ? "Archivo guardado"
+                  : "Sin archivos seleccionados"}
               </span>
             </div>
             <p className="text-xs text-muted-foreground">Subir factura de compra en formato PDF</p>
@@ -378,26 +407,34 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
           <div className="space-y-4">
             <div className="space-y-2">
               <Label className="text-sm font-medium">Factura PDF</Label>
-              <Select>
-              <SelectTrigger className="bg-input w-full">
-                  <SelectValue placeholder="---------" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Sin archivo</SelectItem>
-                </SelectContent>
-              </Select>
+              {formData.facturaPdf ? (
+                <a
+                  href={formData.facturaPdf}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-primary underline"
+                >
+                  Ver PDF
+                </a>
+              ) : (
+                <p className="text-sm text-muted-foreground">---------</p>
+              )}
             </div>
 
             <div className="space-y-2">
               <Label className="text-sm font-medium">Declaración PDF</Label>
-              <Select>
-              <SelectTrigger className="bg-input w-full">
-                  <SelectValue placeholder="---------" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Sin archivo</SelectItem>
-                </SelectContent>
-              </Select>
+              {formData.declaracionPdf ? (
+                <a
+                  href={formData.declaracionPdf}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-primary underline"
+                >
+                  Ver PDF
+                </a>
+              ) : (
+                <p className="text-sm text-muted-foreground">---------</p>
+              )}
             </div>
           </div>
         </div>
