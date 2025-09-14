@@ -217,7 +217,7 @@ export function RentalForm() {
       </div>
 
       <div className="space-y-2">
-        <Label className="text-sm font-medium">Ingresar factura (PDF)</Label>
+        <Label className="text-sm font-medium">Ingresar guía de despacho (PDF)</Label>
         <input
           type="file"
           accept="application/pdf"
@@ -240,7 +240,7 @@ export function RentalForm() {
             {facturaFile ? facturaFile.name : "Sin archivos seleccionados"}
           </span>
         </div>
-        <p className="text-xs text-muted-foreground">Subir factura en formato PDF</p>
+        <p className="text-xs text-muted-foreground">Subir guía de despacho en formato PDF</p>
       </div>
 
       <Button type="submit" className="bg-primary hover:bg-primary/90">
