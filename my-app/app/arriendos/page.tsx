@@ -12,7 +12,7 @@ interface Rental {
   fechaEntrega: string
   codigoGuia: string
   fechaRetiro: string
-  facturaPdf?: string
+  guiaPdf?: string
 }
 
 export default function ArriendosPage() {
@@ -53,7 +53,7 @@ export default function ArriendosPage() {
                     <th className="py-2 px-3 text-left">Fecha entrega</th>
                     <th className="py-2 px-3 text-left">Fecha retiro</th>
                     <th className="py-2 px-3 text-left">Guía</th>
-                    <th className="py-2 px-3 text-left">Factura</th>
+                    <th className="py-2 px-3 text-left">Guía PDF</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -65,10 +65,10 @@ export default function ArriendosPage() {
                       <td className="py-2 px-3">{r.fechaRetiro || "-"}</td>
                       <td className="py-2 px-3">{r.codigoGuia || "-"}</td>
                       <td className="py-2 px-3">
-                        {r.facturaPdf ? (
+                        {r.guiaPdf ? (
                           <button
                             type="button"
-                            onClick={() => downloadFile(r.facturaPdf, `factura-${r.contenedor}.pdf`)}
+                            onClick={() => downloadFile(r.guiaPdf, `guia-${r.contenedor}.pdf`)}
                             className="text-primary hover:underline"
                           >
                             Descargar
