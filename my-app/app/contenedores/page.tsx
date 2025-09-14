@@ -11,6 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 
 interface Container {
   serieLetra: string
@@ -170,6 +172,7 @@ export default function ContainersPage() {
                     <th className="py-2 px-3 text-left">Fecha Declaración</th>
                     <th className="py-2 px-3 text-left">Fecha Compra</th>
                     <th className="py-2 px-3 text-left">Notas</th>
+                    <th className="py-2 px-3 text-left">Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -184,6 +187,13 @@ export default function ContainersPage() {
                       <td className="py-2 px-3">{c.fechaDeclaracion || "-"}</td>
                       <td className="py-2 px-3">{c.fechaCompra || "-"}</td>
                       <td className="py-2 px-3 max-w-[200px] truncate">{c.notas || "-"}</td>
+                      <td className="py-2 px-3">
+                        <Link href={`/contenedores/${index}`}>
+                          <Button variant="outline" size="sm">
+                            Modificar
+                          </Button>
+                        </Link>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

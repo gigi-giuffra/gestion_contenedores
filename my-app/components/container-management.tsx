@@ -6,12 +6,18 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Calendar, Upload, Container, FileText } from "lucide-react"
 
-interface ContainerFormData {
+export interface ContainerFormData {
   serieLetra: string
   numeroSerie: string
   tipo: string
@@ -24,19 +30,26 @@ interface ContainerFormData {
   notas: string
 }
 
-export function ContainerManagement() {
-  const [formData, setFormData] = useState<ContainerFormData>({
-    serieLetra: "",
-    numeroSerie: "",
-    tipo: "",
-    estado: "Disponible",
-    patio: "",
-    proveedor: "",
-    numeroDeclaracion: "",
-    fechaDeclaracion: "",
-    fechaCompra: "",
-    notas: "",
-  })
+interface ContainerManagementProps {
+  initialData?: ContainerFormData
+  index?: number
+}
+
+export function ContainerManagement({ initialData, index }: ContainerManagementProps) {
+  const [formData, setFormData] = useState<ContainerFormData>(
+    initialData || {
+      serieLetra: "",
+      numeroSerie: "",
+      tipo: "",
+      estado: "Disponible",
+      patio: "",
+      proveedor: "",
+      numeroDeclaracion: "",
+      fechaDeclaracion: "",
+      fechaCompra: "",
+      notas: "",
+    },
+  )
 
   const [declaracionFile, setDeclaracionFile] = useState<File | null>(null)
   const [facturaFile, setFacturaFile] = useState<File | null>(null)
@@ -44,6 +57,7 @@ export function ContainerManagement() {
   const facturaInputRef = useRef<HTMLInputElement>(null)
 
   const router = useRouter()
+  const isEditing = typeof index === "number" && !!initialData
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -92,22 +106,47 @@ export function ContainerManagement() {
       }
       stored = []
     }
-    stored.push(formData)
+
+    if (isEditing && typeof index === "number") {
+      stored[index] = formData
+    } else {
+      stored.push(formData)
+    }
     localStorage.setItem("contenedores", JSON.stringify(stored))
     router.push("/contenedores")
   }
 
+  const handleDelete = () => {
+    if (!isEditing || typeof index !== "number") return
+    if (confirm("¿Está seguro de eliminar este contenedor?")) {
+      let stored: ContainerFormData[] = []
+      try {
+        const parsed = JSON.parse(localStorage.getItem("contenedores") || "[]")
+        if (Array.isArray(parsed)) {
+          stored = parsed
+        }
+      } catch {
+        stored = []
+      }
+      stored.splice(index, 1)
+      localStorage.setItem("contenedores", JSON.stringify(stored))
+      router.push("/contenedores")
+    }
+  }
+
   return (
-    <DashboardLayout breadcrumbs={["Contenedores", "Añadir Contenedor"]}>
-  <Card className="max-w-4xl">
-    <CardHeader>
-      <CardTitle className="text-2xl font-semibold flex items-center gap-3">
-        <Container className="h-6 w-6 text-primary" />
-        Añadir Contenedor
-      </CardTitle>
-    </CardHeader>
-    <CardContent>
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <DashboardLayout
+      breadcrumbs={["Contenedores", isEditing ? "Modificar Contenedor" : "Añadir Contenedor"]}
+    >
+      <Card className="max-w-4xl">
+        <CardHeader>
+          <CardTitle className="text-2xl font-semibold flex items-center gap-3">
+            <Container className="h-6 w-6 text-primary" />
+            {isEditing ? "Modificar Contenedor" : "Añadir Contenedor"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Serie letra */}
         <div className="space-y-2">
@@ -383,12 +422,24 @@ export function ContainerManagement() {
         <Button type="submit" className="bg-primary hover:bg-primary/90">
           Guardar
         </Button>
-        <Button type="button" variant="secondary">
-          Guardar y añadir otro
-        </Button>
-        <Button type="button" variant="outline">
-          Guardar y continuar editando
-        </Button>
+        {isEditing ? (
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={handleDelete}
+          >
+            Eliminar
+          </Button>
+        ) : (
+          <>
+            <Button type="button" variant="secondary">
+              Guardar y añadir otro
+            </Button>
+            <Button type="button" variant="outline">
+              Guardar y continuar editando
+            </Button>
+          </>
+        )}
       </div>
       </form>
     </CardContent>
