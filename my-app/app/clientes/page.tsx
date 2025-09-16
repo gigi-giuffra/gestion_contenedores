@@ -23,8 +23,22 @@ export default function ClientesPage() {
 
   useEffect(() => {
     const stored = localStorage.getItem("clientes")
-    if (stored) {
-      setClientes(JSON.parse(stored))
+    if (!stored) {
+      setClientes([])
+      return
+    }
+
+    try {
+      const parsed = JSON.parse(stored)
+      if (Array.isArray(parsed)) {
+        setClientes(parsed)
+      } else {
+        console.warn("El registro de clientes en localStorage no es un arreglo válido")
+        setClientes([])
+      }
+    } catch (error) {
+      console.error("No se pudieron cargar los clientes desde localStorage", error)
+      setClientes([])
     }
   }, [])
 
