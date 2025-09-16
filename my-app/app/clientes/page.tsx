@@ -1,11 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Users } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 
 type Cliente = {
   id: number
@@ -20,6 +21,31 @@ type Cliente = {
 
 export default function ClientesPage() {
   const [clientes, setClientes] = useState<Cliente[]>([])
+  const [searchTerm, setSearchTerm] = useState("")
+
+  const filteredClients = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase()
+
+    if (!term) {
+      return clientes
+    }
+
+    return clientes.filter((cliente) => {
+      const values = [
+        cliente.nombre,
+        cliente.tipo,
+        cliente.documento,
+        cliente.email,
+        cliente.telefono,
+        cliente.contacto,
+        cliente.ciudad,
+      ]
+        .filter(Boolean)
+        .map((value) => value.toLowerCase())
+
+      return values.some((value) => value.includes(term))
+    })
+  }, [clientes, searchTerm])
 
   useEffect(() => {
     const stored = localStorage.getItem("clientes")
@@ -51,30 +77,47 @@ export default function ClientesPage() {
             Registro de Clientes
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <Input
+            placeholder="Buscar por nombre, documento, contacto o tipo"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+          />
           {clientes.length ? (
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-2">Nombre</th>
-                  <th className="text-left py-2">Tipo de Cliente</th>
-                  <th className="text-right py-2">&nbsp;</th>
-                </tr>
-              </thead>
-              <tbody>
-                {clientes.map((c: Cliente, index) => (
-                  <tr key={c.id} className="border-b last:border-b-0">
-                    <td className="py-2 font-medium">{c.nombre}</td>
-                    <td className="py-2">{c.tipo}</td>
-                    <td className="py-2 text-right">
-                      <Link href={`/clientes/${index}`}>
-                        <Button variant="outline" size="sm">Modificar</Button>
-                      </Link>
-                    </td>
+            filteredClients.length ? (
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2">Nombre</th>
+                    <th className="text-left py-2">Tipo de Cliente</th>
+                    <th className="text-right py-2">&nbsp;</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filteredClients.map((cliente: Cliente) => {
+                    const clientIndex = clientes.findIndex(
+                      (item) => item.id === cliente.id,
+                    )
+
+                    return (
+                      <tr key={cliente.id} className="border-b last:border-b-0">
+                        <td className="py-2 font-medium">{cliente.nombre}</td>
+                        <td className="py-2">{cliente.tipo}</td>
+                        <td className="py-2 text-right">
+                          <Link href={`/clientes/${clientIndex}`}>
+                            <Button variant="outline" size="sm">Modificar</Button>
+                          </Link>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            ) : (
+              <p className="text-muted-foreground">
+                No se encontraron clientes que coincidan con la búsqueda.
+              </p>
+            )
           ) : (
             <p className="text-muted-foreground">No hay clientes registrados.</p>
           )}
