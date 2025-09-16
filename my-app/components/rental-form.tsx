@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -36,6 +36,7 @@ const isClientWithName = (value: unknown): value is { nombre: string } => {
 export function RentalForm() {
   const [containers, setContainers] = useState<Container[]>([])
   const [clients, setClients] = useState<string[]>([])
+  const [containerSearch, setContainerSearch] = useState("")
   const [formData, setFormData] = useState<RentalData>({
     contenedor: "",
     cliente: "",
@@ -145,53 +146,67 @@ export function RentalForm() {
     router.push("/arriendos")
   }
 
+  const availableContainers = containers.filter((c) => c.estado !== "Arrendado")
+  const normalizedSearch = containerSearch.trim().toLowerCase()
+  const filteredContainers = normalizedSearch
+    ? availableContainers.filter((c) =>
+        `${c.serieLetra}${c.numeroSerie}`.toLowerCase().includes(normalizedSearch),
+      )
+    : availableContainers
+  const containerPlaceholder = availableContainers.length
+    ? filteredContainers.length
+      ? "Seleccionar contenedor"
+      : "No se encontraron contenedores"
+    : "No hay contenedores registrados"
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
           <Label htmlFor="contenedor">Contenedor</Label>
-          {(() => {
-            const availableContainers = containers.filter(
-              (c) => c.estado !== "Arrendado"
-            )
-            return (
-              <Select
-                value={formData.contenedor}
-                onValueChange={(value) => handleChange("contenedor", value)}
-                disabled={availableContainers.length === 0}
-              >
-                <SelectTrigger
-                  id="contenedor"
-                  className="bg-input"
-                  disabled={availableContainers.length === 0}
-                >
-                  <SelectValue
-                    placeholder={
-                      availableContainers.length
-                        ? "Seleccionar contenedor"
-                        : "No hay contenedores registrados"
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableContainers.length ? (
-                    availableContainers.map((c) => {
-                      const serie = `${c.serieLetra}${c.numeroSerie}`
-                      return (
-                        <SelectItem key={serie} value={serie}>
-                          {serie}
-                        </SelectItem>
-                      )
-                    })
-                  ) : (
-                    <SelectItem value="" disabled>
-                      No hay contenedores registrados
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-            )
-          })()}
+          <Input
+            id="buscar-contenedor"
+            placeholder="Buscar por letra o número de serie"
+            value={containerSearch}
+            onChange={(event) => setContainerSearch(event.target.value)}
+            className="bg-input"
+            disabled={availableContainers.length === 0}
+          />
+          <Select
+            value={formData.contenedor}
+            onValueChange={(value) => handleChange("contenedor", value)}
+            disabled={availableContainers.length === 0}
+          >
+            <SelectTrigger
+              id="contenedor"
+              className="bg-input"
+              disabled={availableContainers.length === 0}
+            >
+              <SelectValue placeholder={containerPlaceholder} />
+            </SelectTrigger>
+            <SelectContent>
+              {availableContainers.length ? (
+                filteredContainers.length ? (
+                  filteredContainers.map((c) => {
+                    const serie = `${c.serieLetra}${c.numeroSerie}`
+                    return (
+                      <SelectItem key={serie} value={serie}>
+                        {serie}
+                      </SelectItem>
+                    )
+                  })
+                ) : (
+                  <SelectItem value="no-results" disabled>
+                    No se encontraron contenedores
+                  </SelectItem>
+                )
+              ) : (
+                <SelectItem value="no-containers" disabled>
+                  No hay contenedores registrados
+                </SelectItem>
+              )}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="space-y-2">
