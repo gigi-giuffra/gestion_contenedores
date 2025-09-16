@@ -42,13 +42,30 @@ export function ClientForm({ initialData, index }: ClientFormProps) {
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
-    const existing = JSON.parse(localStorage.getItem("clientes") || "[]")
-    if (typeof index === "number" && initialData) {
+
+    let existing: Cliente[] = []
+    try {
+      const stored = localStorage.getItem("clientes")
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (Array.isArray(parsed)) {
+          existing = parsed as Cliente[]
+        } else {
+          console.warn("El valor almacenado en 'clientes' no es un arreglo. Se reemplazará por uno vacío.")
+        }
+      }
+    } catch (error) {
+      console.warn("No se pudo leer la lista de clientes. Se reemplazará por un arreglo vacío.", error)
+      existing = []
+    }
+
+    if (typeof index === "number" && initialData && index >= 0 && index < existing.length) {
       existing[index] = { id: initialData.id, ...formData }
     } else {
       const newClient = { id: Date.now(), ...formData }
       existing.push(newClient)
     }
+
     localStorage.setItem("clientes", JSON.stringify(existing))
     router.push("/clientes")
   }
@@ -56,8 +73,26 @@ export function ClientForm({ initialData, index }: ClientFormProps) {
   const handleDelete = () => {
     if (typeof index !== "number") return
     if (confirm("¿Está seguro de eliminar este cliente?")) {
-      const existing = JSON.parse(localStorage.getItem("clientes") || "[]")
-      existing.splice(index, 1)
+      let existing: Cliente[] = []
+      try {
+        const stored = localStorage.getItem("clientes")
+        if (stored) {
+          const parsed = JSON.parse(stored)
+          if (Array.isArray(parsed)) {
+            existing = parsed as Cliente[]
+          } else {
+            console.warn("El valor almacenado en 'clientes' no es un arreglo. Se reemplazará por uno vacío.")
+          }
+        }
+      } catch (error) {
+        console.warn("No se pudo leer la lista de clientes. Se reemplazará por un arreglo vacío.", error)
+        existing = []
+      }
+
+      if (index >= 0 && index < existing.length) {
+        existing.splice(index, 1)
+      }
+
       localStorage.setItem("clientes", JSON.stringify(existing))
       router.push("/clientes")
     }
