@@ -24,9 +24,27 @@ interface RentalData {
   guiaPdf?: string
 }
 
+const isClientWithName = (value: unknown): value is { nombre: string } => {
+  if (typeof value !== "object" || value === null) {
+    return false
+  }
+
+  const record = value as Record<string, unknown>
+  return typeof record.nombre === "string" && record.nombre.trim().length > 0
+}
+
 export function RentalForm() {
   const [containers, setContainers] = useState<Container[]>([])
-  const clients = ["Cliente A", "Cliente B"]
+  const [clients, setClients] = useState<string[]>([])
+  const [formData, setFormData] = useState<RentalData>({
+    contenedor: "",
+    cliente: "",
+    fechaEntrega: "",
+    codigoGuia: "",
+    fechaRetiro: "",
+  })
+  const [guiaFile, setGuiaFile] = useState<File | null>(null)
+  const guiaInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -46,16 +64,31 @@ export function RentalForm() {
     }
   }, [])
 
-  const [formData, setFormData] = useState<RentalData>({
-    contenedor: "",
-    cliente: "",
-    fechaEntrega: "",
-    codigoGuia: "",
-    fechaRetiro: "",
-  })
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("clientes") || "[]")
+      if (Array.isArray(stored)) {
+        const clientNames = stored
+          .filter(isClientWithName)
+          .map((client) => client.nombre.trim())
+        setClients(Array.from(new Set(clientNames)))
+      } else {
+        alert("Los datos de clientes están corruptos. Se mostrará una lista vacía.")
+        setClients([])
+      }
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        alert("Error al leer los clientes almacenados.")
+      }
+      setClients([])
+    }
+  }, [])
 
-  const [guiaFile, setGuiaFile] = useState<File | null>(null)
-  const guiaInputRef = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    if (formData.cliente && !clients.includes(formData.cliente)) {
+      setFormData((prev) => ({ ...prev, cliente: "" }))
+    }
+  }, [clients, formData.cliente])
 
   const readFileAsDataURL = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -163,16 +196,30 @@ export function RentalForm() {
 
         <div className="space-y-2">
           <Label htmlFor="cliente">Cliente</Label>
-          <Select value={formData.cliente} onValueChange={(value) => handleChange("cliente", value)}>
-            <SelectTrigger id="cliente" className="bg-input">
-              <SelectValue placeholder="Seleccionar cliente" />
+          <Select
+            value={formData.cliente}
+            onValueChange={(value) => handleChange("cliente", value)}
+            disabled={clients.length === 0}
+          >
+            <SelectTrigger id="cliente" className="bg-input" disabled={clients.length === 0}>
+              <SelectValue
+                placeholder={
+                  clients.length ? "Seleccionar cliente" : "No hay clientes registrados"
+                }
+              />
             </SelectTrigger>
             <SelectContent>
-              {clients.map((c) => (
-                <SelectItem key={c} value={c}>
-                  {c}
+              {clients.length ? (
+                clients.map((clientName) => (
+                  <SelectItem key={clientName} value={clientName}>
+                    {clientName}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="" disabled>
+                  No hay clientes registrados
                 </SelectItem>
-              ))}
+              )}
             </SelectContent>
           </Select>
         </div>
