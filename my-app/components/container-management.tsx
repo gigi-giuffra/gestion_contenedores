@@ -1,26 +1,19 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DashboardLayout } from "@/components/dashboard-layout"
-import { Calendar, Upload, Container, FileText } from "lucide-react"
-import { downloadFile } from "@/lib/utils"
+import { CheckCircle2, Circle, Container, XCircle } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 export interface ContainerFormData {
   serieLetra: string
   numeroSerie: string
+  digitoControl: string
   tipo: string
   estado: string
   patio: string
@@ -33,81 +26,117 @@ export interface ContainerFormData {
   facturaPdf?: string
 }
 
+type ValidatedField = "serieLetra" | "numeroSerie" | "digitoControl"
+
+const FIELD_CONFIG: Record<ValidatedField, { label: string; placeholder: string; error: string }> = {
+  serieLetra: {
+    label: "Serie Letra",
+    placeholder: "MEDU",
+    error: "Debe contener exactamente 4 letras (A-Z).",
+  },
+  numeroSerie: {
+    label: "Serie Número",
+    placeholder: "123456",
+    error: "Debe contener exactamente 6 números.",
+  },
+  digitoControl: {
+    label: "Agregar Dígito de Control",
+    placeholder: "8",
+    error: "Debe contener un único número.",
+  },
+}
+
+const FIELD_VALIDATORS: Record<ValidatedField, (value: string) => boolean> = {
+  serieLetra: (value) => /^[A-Z]{4}$/.test(value),
+  numeroSerie: (value) => /^\d{6}$/.test(value),
+  digitoControl: (value) => /^\d$/.test(value),
+}
+
+const FIELD_SANITIZERS: Record<ValidatedField, (value: string) => string> = {
+  serieLetra: (value) => value.replace(/[^a-zA-Z]/g, "").toUpperCase().slice(0, 4),
+  numeroSerie: (value) => value.replace(/\D/g, "").slice(0, 6),
+  digitoControl: (value) => value.replace(/\D/g, "").slice(0, 1),
+}
+
+const VALIDATED_FIELDS: ValidatedField[] = ["serieLetra", "numeroSerie", "digitoControl"]
+
+const EMPTY_FORM_DATA: ContainerFormData = {
+  serieLetra: "",
+  numeroSerie: "",
+  digitoControl: "",
+  tipo: "",
+  estado: "Disponible",
+  patio: "",
+  proveedor: "",
+  numeroDeclaracion: "",
+  fechaDeclaracion: "",
+  fechaCompra: "",
+  notas: "",
+  declaracionPdf: "",
+  facturaPdf: "",
+}
+
 interface ContainerManagementProps {
   initialData?: ContainerFormData
   index?: number
 }
 
 export function ContainerManagement({ initialData, index }: ContainerManagementProps) {
-  const [formData, setFormData] = useState<ContainerFormData>(
-    initialData || {
-      serieLetra: "",
-      numeroSerie: "",
-      tipo: "",
-      estado: "Disponible",
-      patio: "",
-      proveedor: "",
-      numeroDeclaracion: "",
-      fechaDeclaracion: "",
-      fechaCompra: "",
-      notas: "",
-      declaracionPdf: "",
-      facturaPdf: "",
-    },
-  )
+  const [formData, setFormData] = useState<ContainerFormData>({ ...EMPTY_FORM_DATA })
 
-  const [declaracionFile, setDeclaracionFile] = useState<File | null>(null)
-  const [facturaFile, setFacturaFile] = useState<File | null>(null)
-  const declaracionInputRef = useRef<HTMLInputElement>(null)
-  const facturaInputRef = useRef<HTMLInputElement>(null)
+  const [touchedFields, setTouchedFields] = useState<Record<ValidatedField, boolean>>({
+    serieLetra: false,
+    numeroSerie: false,
+    digitoControl: false,
+  })
 
   const router = useRouter()
   const isEditing = typeof index === "number" && !!initialData
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
-
-  const handleEstadoChange = (value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      estado: value,
-      patio: value === "Arrendado" ? "" : prev.patio,
-    }))
-  }
-
-  const readFileAsDataURL = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = () => resolve(reader.result as string)
-      reader.onerror = reject
-      reader.readAsDataURL(file)
-    })
-  }
-
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault()
-    const { estado, patio } = formData
-    const requiresPatio =
-      estado === "Disponible" || estado === "Mantenimiento" || estado === "Rancho"
-    if (requiresPatio && !patio) {
-      alert(
-        "Debe seleccionar un patio cuando el contenedor está Disponible, en Mantenimiento o en Rancho",
-      )
-      return
+  useEffect(() => {
+    if (initialData) {
+      setFormData({ ...EMPTY_FORM_DATA, ...initialData })
+      setTouchedFields({
+        serieLetra: true,
+        numeroSerie: true,
+        digitoControl: true,
+      })
+    } else {
+      setFormData({ ...EMPTY_FORM_DATA })
+      setTouchedFields({
+        serieLetra: false,
+        numeroSerie: false,
+        digitoControl: false,
+      })
     }
-    if (estado === "Arrendado" && patio) {
-      alert("No debe seleccionar un patio cuando el contenedor está Arrendado")
+  }, [initialData])
+
+  const updateFieldValue = (field: ValidatedField, value: string) => {
+    const sanitized = FIELD_SANITIZERS[field](value)
+    setFormData((prev) => ({ ...prev, [field]: sanitized }))
+    setTouchedFields((prev) => ({ ...prev, [field]: true }))
+  }
+
+  const isFieldValid = (field: ValidatedField) => FIELD_VALIDATORS[field](formData[field])
+
+  const isFormValid = VALIDATED_FIELDS.every((field) => isFieldValid(field))
+
+  const markAllTouched = () =>
+    setTouchedFields({
+      serieLetra: true,
+      numeroSerie: true,
+      digitoControl: true,
+    })
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault()
+
+    if (!isFormValid) {
+      markAllTouched()
       return
     }
 
     const updatedData = { ...formData }
-    if (declaracionFile) {
-      updatedData.declaracionPdf = await readFileAsDataURL(declaracionFile)
-    }
-    if (facturaFile) {
-      updatedData.facturaPdf = await readFileAsDataURL(facturaFile)
-    }
 
     let stored: ContainerFormData[] = []
     try {
@@ -169,325 +198,81 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Serie letra */}
-        <div className="space-y-2">
-          <Label htmlFor="serie-letra" className="text-sm font-medium">
-            Serie letra
-          </Label>
-          <Input
-            id="serie-letra"
-            placeholder="Prefijo letras del contenedor (p. ej. AB)"
-            value={formData.serieLetra}
-            onChange={(e) => {
-              const value = e.target.value.replace(/[^a-zA-Z]/g, "").toUpperCase()
-              handleInputChange("serieLetra", value)
-            }}
-            className="bg-input"
-          />
-        </div>
+            <div className="space-y-5">
+              {VALIDATED_FIELDS.map((field) => {
+                const config = FIELD_CONFIG[field]
+                const value = formData[field]
+                const isTouched = touchedFields[field]
+                const isValid = isFieldValid(field)
+                const showError = isTouched && !isValid
+                const inputId = `container-${field}`
 
-        {/* Número serie números */}
-        <div className="space-y-2">
-          <Label htmlFor="numero-serie" className="text-sm font-medium">
-            Número serie números
-          </Label>
-          <Input
-            id="numero-serie"
-            placeholder="Parte numérica del contenedor (p. ej. 123456)"
-            value={formData.numeroSerie}
-            onChange={(e) => handleInputChange("numeroSerie", e.target.value)}
-            className="bg-input"
-          />
-        </div>
-
-        {/* Tipo */}
-        <div className="space-y-2">
-          <Label htmlFor="tipo" className="text-sm font-medium">
-            Tipo
-          </Label>
-          <Select value={formData.tipo} onValueChange={(value) => handleInputChange("tipo", value)}>
-            <SelectTrigger className="bg-input w-full">
-              <SelectValue placeholder="Seleccione el tipo del contenedor" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="banos">BAÑOS</SelectItem>
-              <SelectItem value="duchas">DUCHAS</SelectItem>
-              <SelectItem value="oficina">OFICINA</SelectItem>
-              <SelectItem value="ofic-bano">OFIC/BAÑO</SelectItem>
-              <SelectItem value="ofic-dormitorio">OFIC/DORMITORIO</SelectItem>
-              <SelectItem value="ofic-separ">OFIC/SEPAR</SelectItem>
-              <SelectItem value="bodega-40">BODEGA 40</SelectItem>
-              <SelectItem value="bodega-50">BODEGA 50%</SelectItem>
-              <SelectItem value="bod-estan">BOD/ESTAN</SelectItem>
-              <SelectItem value="bod-art-pel">BOD ART PEL</SelectItem>
-              <SelectItem value="sala-cambio">SALA CAMBIO</SelectItem>
-              <SelectItem value="bod-estanque">BOD/ESTANQUE</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Estado */}
-        <div className="space-y-2">
-          <Label htmlFor="estado" className="text-sm font-medium">
-            Estado
-          </Label>
-          <Select value={formData.estado} onValueChange={handleEstadoChange}>
-            <SelectTrigger className="bg-input w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Disponible">Disponible</SelectItem>
-              <SelectItem value="Arrendado">Arrendado</SelectItem>
-              <SelectItem value="Mantenimiento">Mantenimiento</SelectItem>
-              <SelectItem value="Rancho">Rancho</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Patio */}
-        <div className="space-y-2">
-          <Label htmlFor="patio" className="text-sm font-medium">
-            Patio
-          </Label>
-          <Select
-            value={formData.patio}
-            onValueChange={(value) => handleInputChange("patio", value)}
-            disabled={formData.estado === "Arrendado"}
-          >
-            <SelectTrigger className="bg-input w-full" disabled={formData.estado === "Arrendado"}>
-              <SelectValue placeholder="Seleccione un patio (si aplica)" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="patio-1">PATIO 1</SelectItem>
-              <SelectItem value="patio-2">PATIO 2</SelectItem>
-              <SelectItem value="patio-3">PATIO 3</SelectItem>
-              <SelectItem value="patio-4">PATIO 4</SelectItem>
-              <SelectItem value="patio-5">PATIO 5</SelectItem>
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-muted-foreground">
-            Requerido cuando el contenedor está Disponible, en Mantenimiento o en Rancho
-          </p>
-        </div>
-
-        {/* Proveedor */}
-        <div className="space-y-2">
-          <Label htmlFor="proveedor" className="text-sm font-medium">
-            Proveedor
-          </Label>
-          <Input
-            id="proveedor"
-            placeholder="Nombre del proveedor (opcional)"
-            value={formData.proveedor}
-            onChange={(e) => handleInputChange("proveedor", e.target.value)}
-            className="bg-input"
-          />
-        </div>
-      </div>
-
-      {/* Declaración de Importación Section */}
-      <div className="space-y-4 border-t pt-6">
-        <h3 className="text-lg font-medium flex items-center gap-2">
-          <FileText className="h-5 w-5 text-primary" />
-          Declaración de Importación
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="numero-declaracion" className="text-sm font-medium">
-              Nº Declaración de Importación
-            </Label>
-            <Input
-              id="numero-declaracion"
-              placeholder="Número de la Declaración de Importación"
-              value={formData.numeroDeclaracion}
-              onChange={(e) => handleInputChange("numeroDeclaracion", e.target.value)}
-              className="bg-input"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="fecha-declaracion" className="text-sm font-medium">
-              Fecha Declaración de Importación
-            </Label>
-            <div className="relative">
-              <Input
-                id="fecha-declaracion"
-                type="date"
-                value={formData.fechaDeclaracion}
-                onChange={(e) => handleInputChange("fechaDeclaracion", e.target.value)}
-                className="bg-input"
-              />
-              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                return (
+                  <div key={field} className="space-y-2">
+                    <Label htmlFor={inputId} className="text-sm font-medium">
+                      {config.label}
+                    </Label>
+                    <div className="flex items-center gap-3">
+                      <Input
+                        id={inputId}
+                        name={field}
+                        value={value}
+                        placeholder={config.placeholder}
+                        onChange={(event) => updateFieldValue(field, event.target.value)}
+                        className={cn(
+                          "bg-input",
+                          isTouched
+                            ? isValid
+                              ? "border-[#22c55e] focus-visible:border-[#22c55e] focus-visible:ring-[#22c55e]/40"
+                              : "border-[#ef4444] focus-visible:border-[#ef4444] focus-visible:ring-[#ef4444]/40"
+                            : "border-input",
+                        )}
+                        aria-invalid={showError}
+                        aria-describedby={showError ? `${inputId}-error` : undefined}
+                        inputMode={field === "serieLetra" ? "text" : "numeric"}
+                        pattern={field === "serieLetra" ? undefined : "\\d*"}
+                        maxLength={field === "serieLetra" ? 4 : field === "numeroSerie" ? 6 : 1}
+                        autoComplete="off"
+                        autoCapitalize={field === "serieLetra" ? "characters" : "off"}
+                      />
+                      {!isTouched ? (
+                        <Circle className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+                      ) : isValid ? (
+                        <CheckCircle2 className="h-5 w-5 text-[#22c55e]" aria-hidden="true" />
+                      ) : (
+                        <XCircle className="h-5 w-5 text-[#ef4444]" aria-hidden="true" />
+                      )}
+                    </div>
+                    {showError && (
+                      <p id={`${inputId}-error`} className="text-sm text-[#ef4444]">
+                        {config.error}
+                      </p>
+                    )}
+                  </div>
+                )
+              })}
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Declaración de Importación (PDF)</Label>
-            <input
-              type="file"
-              accept="application/pdf"
-              ref={declaracionInputRef}
-              onChange={(e) => setDeclaracionFile(e.target.files?.[0] || null)}
-              className="hidden"
-            />
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap gap-3 pt-4 border-t">
               <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2 bg-transparent"
-                onClick={() => declaracionInputRef.current?.click()}
+                type="submit"
+                className="bg-primary hover:bg-primary/90"
+                disabled={!isFormValid}
               >
-                <Upload className="h-4 w-4" />
-                Seleccionar archivo
+                Guardar
               </Button>
-              <span className="text-sm text-muted-foreground">
-                {declaracionFile
-                  ? declaracionFile.name
-                  : formData.declaracionPdf
-                  ? "Archivo guardado"
-                  : "Sin archivos seleccionados"}
-              </span>
-            </div>
-            <p className="text-xs text-muted-foreground">Subir la Declaración de Importación en PDF</p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="fecha-compra" className="text-sm font-medium">
-              Fecha de compra
-            </Label>
-            <div className="relative">
-              <Input
-                id="fecha-compra"
-                type="date"
-                value={formData.fechaCompra}
-                onChange={(e) => handleInputChange("fechaCompra", e.target.value)}
-                className="bg-input"
-              />
-              <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            </div>
-            <p className="text-xs text-muted-foreground">Fecha en que se compró el contenedor</p>
-          </div>
-        </div>
-
-        {/* File Upload Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Ingresar factura (PDF)</Label>
-            <input
-              type="file"
-              accept="application/pdf"
-              ref={facturaInputRef}
-              onChange={(e) => setFacturaFile(e.target.files?.[0] || null)}
-              className="hidden"
-            />
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2 bg-transparent"
-                onClick={() => facturaInputRef.current?.click()}
-              >
-                <Upload className="h-4 w-4" />
-                Seleccionar archivo
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                {facturaFile
-                  ? facturaFile.name
-                  : formData.facturaPdf
-                  ? "Archivo guardado"
-                  : "Sin archivos seleccionados"}
-              </span>
-            </div>
-            <p className="text-xs text-muted-foreground">Subir factura de compra en formato PDF</p>
-          </div>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Factura PDF</Label>
-              {formData.facturaPdf ? (
-                <button
-                  type="button"
-                  onClick={() =>
-                    downloadFile(
-                      formData.facturaPdf,
-                      `${formData.serieLetra}${formData.numeroSerie}_factura.pdf`,
-                    )
-                  }
-                  className="text-sm text-primary underline"
-                >
-                  Ver PDF
-                </button>
-              ) : (
-                <p className="text-sm text-muted-foreground">---------</p>
+              {isEditing && (
+                <Button type="button" variant="destructive" onClick={handleDelete}>
+                  Eliminar
+                </Button>
               )}
             </div>
-
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Declaración PDF</Label>
-              {formData.declaracionPdf ? (
-                <button
-                  type="button"
-                  onClick={() =>
-                    downloadFile(
-                      formData.declaracionPdf,
-                      `${formData.serieLetra}${formData.numeroSerie}_declaracion.pdf`,
-                    )
-                  }
-                  className="text-sm text-primary underline"
-                >
-                  Ver PDF
-                </button>
-              ) : (
-                <p className="text-sm text-muted-foreground">---------</p>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Notas */}
-      <div className="space-y-2">
-        <Label htmlFor="notas" className="text-sm font-medium">
-          Notas
-        </Label>
-        <Textarea
-          id="notas"
-          placeholder="Notas adicionales sobre el contenedor..."
-          value={formData.notas}
-          onChange={(e) => handleInputChange("notas", e.target.value)}
-          className="min-h-[120px] bg-input resize-none"
-        />
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex flex-wrap gap-3 pt-6 border-t">
-        <Button type="submit" className="bg-primary hover:bg-primary/90">
-          Guardar
-        </Button>
-        {isEditing ? (
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={handleDelete}
-          >
-            Eliminar
-          </Button>
-        ) : (
-          <>
-            <Button type="button" variant="secondary">
-              Guardar y añadir otro
-            </Button>
-            <Button type="button" variant="outline">
-              Guardar y continuar editando
-            </Button>
-          </>
-        )}
-      </div>
-      </form>
+            {!isFormValid && (
+              <p className="text-sm text-muted-foreground">
+                Completa todos los campos con formato válido.
+              </p>
+            )}
+          </form>
     </CardContent>
   </Card>
     </DashboardLayout>
