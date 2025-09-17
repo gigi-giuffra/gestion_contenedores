@@ -21,6 +21,7 @@ import { downloadFile } from "@/lib/utils"
 export interface ContainerFormData {
   serieLetra: string
   numeroSerie: string
+  digitoControl?: string
   tipo: string
   estado: string
   patio: string
@@ -38,23 +39,44 @@ interface ContainerManagementProps {
   index?: number
 }
 
+type ContainerFormState = Omit<ContainerFormData, "digitoControl"> & { digitoControl: string }
+
 export function ContainerManagement({ initialData, index }: ContainerManagementProps) {
-  const [formData, setFormData] = useState<ContainerFormData>(
-    initialData || {
-      serieLetra: "",
-      numeroSerie: "",
-      tipo: "",
-      estado: "Disponible",
-      patio: "",
-      proveedor: "",
-      numeroDeclaracion: "",
-      fechaDeclaracion: "",
-      fechaCompra: "",
-      notas: "",
-      declaracionPdf: "",
-      facturaPdf: "",
-    },
+  const [formData, setFormData] = useState<ContainerFormState>(() =>
+    initialData
+      ? {
+          ...initialData,
+          serieLetra: initialData.serieLetra
+            ? initialData.serieLetra.replace(/[^a-zA-Z]/g, "").toUpperCase().slice(0, 4)
+            : "",
+          numeroSerie: initialData.numeroSerie
+            ? initialData.numeroSerie.replace(/\D/g, "").slice(0, 6)
+            : "",
+          digitoControl: initialData.digitoControl
+            ? initialData.digitoControl.replace(/\D/g, "").slice(0, 1)
+            : "",
+        }
+      : {
+          serieLetra: "",
+          numeroSerie: "",
+          digitoControl: "",
+          tipo: "",
+          estado: "Disponible",
+          patio: "",
+          proveedor: "",
+          numeroDeclaracion: "",
+          fechaDeclaracion: "",
+          fechaCompra: "",
+          notas: "",
+          declaracionPdf: "",
+          facturaPdf: "",
+        },
   )
+  const [errors, setErrors] = useState({
+    serieLetra: "",
+    numeroSerie: "",
+    digitoControl: "",
+  })
 
   const [declaracionFile, setDeclaracionFile] = useState<File | null>(null)
   const [facturaFile, setFacturaFile] = useState<File | null>(null)
@@ -64,9 +86,37 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
   const router = useRouter()
   const isEditing = typeof index === "number" && !!initialData
 
+  const validateSerieLetra = (value: string) =>
+    /^[A-Z]{4}$/.test(value) ? "" : "Debe ser una secuencia de 4 letras (A-Z)."
+  const validateNumeroSerie = (value: string) =>
+    /^[0-9]{6}$/.test(value) ? "" : "Debe ser una secuencia de 6 dígitos (0-9)."
+  const validateDigitoControl = (value: string) =>
+    /^[0-9]$/.test(value) ? "" : "Debe ser un único dígito (0-9)."
+
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
+
+  const handleSerieLetraChange = (value: string) => {
+    const sanitized = value.replace(/[^a-zA-Z]/g, "").toUpperCase().slice(0, 4)
+    setFormData((prev) => ({ ...prev, serieLetra: sanitized }))
+    setErrors((prev) => ({ ...prev, serieLetra: validateSerieLetra(sanitized) }))
+  }
+
+  const handleNumeroSerieChange = (value: string) => {
+    const sanitized = value.replace(/\D/g, "").slice(0, 6)
+    setFormData((prev) => ({ ...prev, numeroSerie: sanitized }))
+    setErrors((prev) => ({ ...prev, numeroSerie: validateNumeroSerie(sanitized) }))
+  }
+
+  const handleDigitoControlChange = (value: string) => {
+    const sanitized = value.replace(/\D/g, "").slice(0, 1)
+    setFormData((prev) => ({ ...prev, digitoControl: sanitized }))
+    setErrors((prev) => ({ ...prev, digitoControl: validateDigitoControl(sanitized) }))
+  }
+
+  const serieCompleta = `${formData.serieLetra}${formData.numeroSerie}${formData.digitoControl}`
+  const nombreArchivoBase = serieCompleta || "contenedor"
 
   const handleEstadoChange = (value: string) => {
     setFormData((prev) => ({
@@ -87,6 +137,18 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
+    const serieError = validateSerieLetra(formData.serieLetra)
+    const numeroError = validateNumeroSerie(formData.numeroSerie)
+    const digitoError = validateDigitoControl(formData.digitoControl)
+    const newErrors = {
+      serieLetra: serieError,
+      numeroSerie: numeroError,
+      digitoControl: digitoError,
+    }
+    setErrors(newErrors)
+    if (serieError || numeroError || digitoError) {
+      return
+    }
     const { estado, patio } = formData
     const requiresPatio =
       estado === "Disponible" || estado === "Mantenimiento" || estado === "Rancho"
@@ -169,36 +231,59 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Serie letra */}
-        <div className="space-y-2">
-          <Label htmlFor="serie-letra" className="text-sm font-medium">
-            Serie letra
-          </Label>
-          <Input
-            id="serie-letra"
-            placeholder="Prefijo letras del contenedor (p. ej. AB)"
-            value={formData.serieLetra}
-            onChange={(e) => {
-              const value = e.target.value.replace(/[^a-zA-Z]/g, "").toUpperCase()
-              handleInputChange("serieLetra", value)
-            }}
-            className="bg-input"
-          />
-        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Serie letra */}
+          <div className="space-y-2">
+            <Label htmlFor="serie-letra" className="text-sm font-medium">
+              Serie letra
+            </Label>
+            <Input
+              id="serie-letra"
+              placeholder="MEDU"
+              value={formData.serieLetra}
+              onChange={(event) => handleSerieLetraChange(event.target.value)}
+              className="bg-input"
+            />
+            {errors.serieLetra && (
+              <p className="text-sm text-destructive">{errors.serieLetra}</p>
+            )}
+          </div>
 
-        {/* Número serie números */}
-        <div className="space-y-2">
-          <Label htmlFor="numero-serie" className="text-sm font-medium">
-            Número serie números
-          </Label>
-          <Input
-            id="numero-serie"
-            placeholder="Parte numérica del contenedor (p. ej. 123456)"
-            value={formData.numeroSerie}
-            onChange={(e) => handleInputChange("numeroSerie", e.target.value)}
-            className="bg-input"
-          />
+          {/* Número serie */}
+          <div className="space-y-2">
+            <Label htmlFor="numero-serie" className="text-sm font-medium">
+              Número serie (números)
+            </Label>
+            <Input
+              id="numero-serie"
+              placeholder="123456"
+              value={formData.numeroSerie}
+              onChange={(event) => handleNumeroSerieChange(event.target.value)}
+              className="bg-input"
+              inputMode="numeric"
+            />
+            {errors.numeroSerie && (
+              <p className="text-sm text-destructive">{errors.numeroSerie}</p>
+            )}
+          </div>
+
+          {/* Dígito de control */}
+          <div className="space-y-2">
+            <Label htmlFor="digito-control" className="text-sm font-medium">
+              Dígito de control
+            </Label>
+            <Input
+              id="digito-control"
+              placeholder="7"
+              value={formData.digitoControl}
+              onChange={(event) => handleDigitoControlChange(event.target.value)}
+              className="bg-input"
+              inputMode="numeric"
+            />
+            {errors.digitoControl && (
+              <p className="text-sm text-destructive">{errors.digitoControl}</p>
+            )}
+          </div>
         </div>
 
         {/* Tipo */}
@@ -284,7 +369,6 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
             className="bg-input"
           />
         </div>
-      </div>
 
       {/* Declaración de Importación Section */}
       <div className="space-y-4 border-t pt-6">
@@ -414,7 +498,7 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
                   onClick={() =>
                     downloadFile(
                       formData.facturaPdf,
-                      `${formData.serieLetra}${formData.numeroSerie}_factura.pdf`,
+                      `${nombreArchivoBase}_factura.pdf`,
                     )
                   }
                   className="text-sm text-primary underline"
@@ -434,7 +518,7 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
                   onClick={() =>
                     downloadFile(
                       formData.declaracionPdf,
-                      `${formData.serieLetra}${formData.numeroSerie}_declaracion.pdf`,
+                      `${nombreArchivoBase}_declaracion.pdf`,
                     )
                   }
                   className="text-sm text-primary underline"
@@ -464,29 +548,29 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
       </div>
 
       {/* Action Buttons */}
-      <div className="flex flex-wrap gap-3 pt-6 border-t">
-        <Button type="submit" className="bg-primary hover:bg-primary/90">
-          Guardar
-        </Button>
-        {isEditing ? (
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={handleDelete}
-          >
-            Eliminar
+        <div className="flex flex-wrap gap-3 pt-6 border-t">
+          <Button type="submit" className="bg-primary hover:bg-primary/90">
+            Guardar
           </Button>
-        ) : (
-          <>
-            <Button type="button" variant="secondary">
-              Guardar y añadir otro
+          {isEditing ? (
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleDelete}
+            >
+              Eliminar
             </Button>
-            <Button type="button" variant="outline">
-              Guardar y continuar editando
-            </Button>
-          </>
-        )}
-      </div>
+          ) : (
+            <>
+              <Button type="button" variant="secondary">
+                Guardar y añadir otro
+              </Button>
+              <Button type="button" variant="outline">
+                Guardar y continuar editando
+              </Button>
+            </>
+          )}
+        </div>
       </form>
     </CardContent>
   </Card>
