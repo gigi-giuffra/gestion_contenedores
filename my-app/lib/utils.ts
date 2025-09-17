@@ -19,3 +19,27 @@ export function downloadFile(url?: string, filename?: string) {
   link.click()
   link.remove()
 }
+
+export function formatDateDisplay(dateString?: string | null) {
+  if (!dateString) {
+    return ""
+  }
+
+  const [normalized] = dateString.split("T")
+  const parts = normalized.split("-")
+
+  if (parts.length !== 3) {
+    return dateString
+  }
+
+  const [year, month, day] = parts
+
+  if (!year || !month || !day) {
+    return dateString
+  }
+
+  const dayPadded = day.padStart(2, "0")
+  const monthPadded = month.padStart(2, "0")
+
+  return `${dayPadded}-${monthPadded}-${year}`
+}

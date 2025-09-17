@@ -5,7 +5,7 @@ import { DashboardLayout } from "@/components/dashboard-layout"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Package } from "lucide-react"
-import { downloadFile } from "@/lib/utils"
+import { downloadFile, formatDateDisplay } from "@/lib/utils"
 
 interface Rental {
   contenedor: string
@@ -85,28 +85,33 @@ export default function ArriendosPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredRentals.map((r, index) => (
-                        <tr key={index} className="border-b last:border-0">
-                          <td className="py-2 px-3">{r.contenedor}</td>
-                          <td className="py-2 px-3">{r.cliente}</td>
-                          <td className="py-2 px-3">{r.fechaEntrega || "-"}</td>
-                          <td className="py-2 px-3">{r.fechaRetiro || "-"}</td>
-                          <td className="py-2 px-3">{r.codigoGuia || "-"}</td>
-                          <td className="py-2 px-3">
-                            {r.guiaPdf ? (
-                              <button
-                                type="button"
-                                onClick={() => downloadFile(r.guiaPdf, `guia-${r.contenedor}.pdf`)}
-                                className="text-primary hover:underline"
-                              >
-                                Descargar
-                              </button>
-                            ) : (
-                              "-"
-                            )}
-                          </td>
-                        </tr>
-                      ))}
+                      {filteredRentals.map((r, index) => {
+                        const fechaEntrega = formatDateDisplay(r.fechaEntrega)
+                        const fechaRetiro = formatDateDisplay(r.fechaRetiro)
+
+                        return (
+                          <tr key={index} className="border-b last:border-0">
+                            <td className="py-2 px-3">{r.contenedor}</td>
+                            <td className="py-2 px-3">{r.cliente}</td>
+                            <td className="py-2 px-3">{fechaEntrega || "-"}</td>
+                            <td className="py-2 px-3">{fechaRetiro || "-"}</td>
+                            <td className="py-2 px-3">{r.codigoGuia || "-"}</td>
+                            <td className="py-2 px-3">
+                              {r.guiaPdf ? (
+                                <button
+                                  type="button"
+                                  onClick={() => downloadFile(r.guiaPdf, `guia-${r.contenedor}.pdf`)}
+                                  className="text-primary hover:underline"
+                                >
+                                  Descargar
+                                </button>
+                              ) : (
+                                "-"
+                              )}
+                            </td>
+                          </tr>
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>
