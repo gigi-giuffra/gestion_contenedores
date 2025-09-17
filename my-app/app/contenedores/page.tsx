@@ -195,8 +195,8 @@ export default function ContainersPage() {
                         <td className="py-2 px-3">{c.patio || "-"}</td>
                         <td className="py-2 px-3">{c.proveedor || "-"}</td>
                         <td className="py-2 px-3">{c.numeroDeclaracion || "-"}</td>
-                        <td className="py-2 px-3">{fechaDeclaracion || "-"}</td>
-                        <td className="py-2 px-3">{fechaCompra || "-"}</td>
+                        <td className="py-2 px-3 whitespace-nowrap">{fechaDeclaracion || "-"}</td>
+                        <td className="py-2 px-3 whitespace-nowrap">{fechaCompra || "-"}</td>
                         <td className="py-2 px-3">
                           {c.declaracionPdf ? (
                             <button

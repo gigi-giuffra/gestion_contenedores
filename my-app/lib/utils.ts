@@ -25,21 +25,45 @@ export function formatDateDisplay(dateString?: string | null) {
     return ""
   }
 
-  const [normalized] = dateString.split("T")
-  const parts = normalized.split("-")
-
-  if (parts.length !== 3) {
-    return dateString
+  const trimmed = dateString.trim()
+  if (!trimmed) {
+    return ""
   }
 
-  const [year, month, day] = parts
+  const [normalized] = trimmed.split("T")
+  const cleaned = normalized.replace(/\s+/g, "")
 
-  if (!year || !month || !day) {
-    return dateString
+  const isoMatch = cleaned.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/)
+  if (isoMatch) {
+    const [, year, month, day] = isoMatch
+    return `${day.padStart(2, "0")}-${month.padStart(2, "0")}-${year}`
   }
 
-  const dayPadded = day.padStart(2, "0")
-  const monthPadded = month.padStart(2, "0")
+  const dayFirstMatch = cleaned.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{2,4})$/)
+  if (dayFirstMatch) {
+    const [, day, month, yearRaw] = dayFirstMatch
+    const year = yearRaw.length === 2 ? `20${yearRaw}` : yearRaw
+    return `${day.padStart(2, "0")}-${month.padStart(2, "0")}-${year.padStart(4, "0")}`
+  }
 
-  return `${dayPadded}-${monthPadded}-${year}`
+  const timestamp = Number(cleaned)
+  if (!Number.isNaN(timestamp)) {
+    const date = new Date(timestamp)
+    if (!Number.isNaN(date.getTime())) {
+      const day = `${date.getDate()}`.padStart(2, "0")
+      const month = `${date.getMonth() + 1}`.padStart(2, "0")
+      const year = `${date.getFullYear()}`
+      return `${day}-${month}-${year}`
+    }
+  }
+
+  const parsed = new Date(cleaned)
+  if (!Number.isNaN(parsed.getTime())) {
+    const day = `${parsed.getDate()}`.padStart(2, "0")
+    const month = `${parsed.getMonth() + 1}`.padStart(2, "0")
+    const year = `${parsed.getFullYear()}`
+    return `${day}-${month}-${year}`
+  }
+
+  return trimmed
 }

@@ -93,8 +93,8 @@ export default function ArriendosPage() {
                           <tr key={index} className="border-b last:border-0">
                             <td className="py-2 px-3">{r.contenedor}</td>
                             <td className="py-2 px-3">{r.cliente}</td>
-                            <td className="py-2 px-3">{fechaEntrega || "-"}</td>
-                            <td className="py-2 px-3">{fechaRetiro || "-"}</td>
+                            <td className="py-2 px-3 whitespace-nowrap">{fechaEntrega || "-"}</td>
+                            <td className="py-2 px-3 whitespace-nowrap">{fechaRetiro || "-"}</td>
                             <td className="py-2 px-3">{r.codigoGuia || "-"}</td>
                             <td className="py-2 px-3">
                               {r.guiaPdf ? (
