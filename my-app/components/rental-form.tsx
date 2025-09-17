@@ -11,6 +11,7 @@ import { Calendar, Upload } from "lucide-react"
 interface Container {
   serieLetra: string
   numeroSerie: string
+  digitoControl?: string
   estado: string
   patio?: string
 }
@@ -133,7 +134,8 @@ export function RentalForm() {
       if (Array.isArray(parsed)) {
         const containersStored = parsed as Container[]
         const idx = containersStored.findIndex(
-          (c) => `${c.serieLetra}${c.numeroSerie}` === formData.contenedor,
+          (c) =>
+            `${c.serieLetra}${c.numeroSerie}${c.digitoControl ?? ""}` === formData.contenedor,
         )
         if (idx !== -1) {
           containersStored[idx].estado = "Arrendado"
@@ -150,7 +152,9 @@ export function RentalForm() {
   const normalizedSearch = containerSearch.trim().toLowerCase()
   const filteredContainers = normalizedSearch
     ? availableContainers.filter((c) =>
-        `${c.serieLetra}${c.numeroSerie}`.toLowerCase().includes(normalizedSearch),
+        `${c.serieLetra}${c.numeroSerie}${c.digitoControl ?? ""}`
+          .toLowerCase()
+          .includes(normalizedSearch),
       )
     : availableContainers
   const containerPlaceholder = availableContainers.length
@@ -188,7 +192,7 @@ export function RentalForm() {
               {availableContainers.length ? (
                 filteredContainers.length ? (
                   filteredContainers.map((c) => {
-                    const serie = `${c.serieLetra}${c.numeroSerie}`
+                    const serie = `${c.serieLetra}${c.numeroSerie}${c.digitoControl ?? ""}`
                     return (
                       <SelectItem key={serie} value={serie}>
                         {serie}

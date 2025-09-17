@@ -18,6 +18,7 @@ import { downloadFile } from "@/lib/utils"
 interface Container {
   serieLetra: string
   numeroSerie: string
+  digitoControl?: string
   tipo: string
   estado: string
   patio: string
@@ -63,7 +64,7 @@ export default function ContainersPage() {
     const matchesPatio = patio === "todos" || !patio || c.patio === patio
     const matchesProveedor =
       !proveedor || c.proveedor?.toLowerCase().includes(proveedor.toLowerCase())
-    const serieCompleta = `${c.serieLetra}${c.numeroSerie}`.toLowerCase()
+    const serieCompleta = `${c.serieLetra}${c.numeroSerie}${c.digitoControl ?? ""}`.toLowerCase()
     const matchesSerie =
       !busquedaSerie || serieCompleta.includes(busquedaSerie.toLowerCase())
     const fecha = c.fechaCompra ? new Date(c.fechaCompra) : null
@@ -181,62 +182,66 @@ export default function ContainersPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredContainers.map((c, index) => (
-                    <tr key={index} className="border-b last:border-0">
-                      <td className="py-2 px-3 font-medium">{c.serieLetra}{c.numeroSerie}</td>
-                      <td className="py-2 px-3 capitalize">{c.tipo}</td>
-                      <td className="py-2 px-3">{c.estado}</td>
-                      <td className="py-2 px-3">{c.patio || "-"}</td>
-                      <td className="py-2 px-3">{c.proveedor || "-"}</td>
-                      <td className="py-2 px-3">{c.numeroDeclaracion || "-"}</td>
-                      <td className="py-2 px-3">{c.fechaDeclaracion || "-"}</td>
-                      <td className="py-2 px-3">{c.fechaCompra || "-"}</td>
-                      <td className="py-2 px-3">
-                        {c.declaracionPdf ? (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              downloadFile(
-                                c.declaracionPdf,
-                                `${c.serieLetra}${c.numeroSerie}_declaracion.pdf`,
-                              )
-                            }
-                            className="text-primary underline"
-                          >
-                            Ver
-                          </button>
-                        ) : (
-                          "-"
-                        )}
-                      </td>
-                      <td className="py-2 px-3">
-                        {c.facturaPdf ? (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              downloadFile(
-                                c.facturaPdf,
-                                `${c.serieLetra}${c.numeroSerie}_factura.pdf`,
-                              )
-                            }
-                            className="text-primary underline"
-                          >
-                            Ver
-                          </button>
-                        ) : (
-                          "-"
-                        )}
-                      </td>
-                      <td className="py-2 px-3 max-w-[200px] truncate">{c.notas || "-"}</td>
-                      <td className="py-2 px-3">
-                        <Link href={`/contenedores/${index}`}>
-                          <Button variant="outline" size="sm">
-                            Modificar
-                          </Button>
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
+                  {filteredContainers.map((c, index) => {
+                    const serieCodigo = `${c.serieLetra}${c.numeroSerie}${c.digitoControl ?? ""}`
+                    const archivoBase = serieCodigo || "contenedor"
+                    return (
+                      <tr key={index} className="border-b last:border-0">
+                        <td className="py-2 px-3 font-medium">{serieCodigo}</td>
+                        <td className="py-2 px-3 capitalize">{c.tipo}</td>
+                        <td className="py-2 px-3">{c.estado}</td>
+                        <td className="py-2 px-3">{c.patio || "-"}</td>
+                        <td className="py-2 px-3">{c.proveedor || "-"}</td>
+                        <td className="py-2 px-3">{c.numeroDeclaracion || "-"}</td>
+                        <td className="py-2 px-3">{c.fechaDeclaracion || "-"}</td>
+                        <td className="py-2 px-3">{c.fechaCompra || "-"}</td>
+                        <td className="py-2 px-3">
+                          {c.declaracionPdf ? (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                downloadFile(
+                                  c.declaracionPdf,
+                                  `${archivoBase}_declaracion.pdf`,
+                                )
+                              }
+                              className="text-primary underline"
+                            >
+                              Ver
+                            </button>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
+                        <td className="py-2 px-3">
+                          {c.facturaPdf ? (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                downloadFile(
+                                  c.facturaPdf,
+                                  `${archivoBase}_factura.pdf`,
+                                )
+                              }
+                              className="text-primary underline"
+                            >
+                              Ver
+                            </button>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
+                        <td className="py-2 px-3 max-w-[200px] truncate">{c.notas || "-"}</td>
+                        <td className="py-2 px-3">
+                          <Link href={`/contenedores/${index}`}>
+                            <Button variant="outline" size="sm">
+                              Modificar
+                            </Button>
+                          </Link>
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
