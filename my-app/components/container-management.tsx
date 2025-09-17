@@ -152,6 +152,8 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
       estado === "Disponible" || estado === "Mantenimiento" || estado === "Rancho"
 
     const missingFields: string[] = []
+    const hasDeclaracionPdf = Boolean(formData.declaracionPdf) || !!declaracionFile
+    const hasFacturaPdf = Boolean(formData.facturaPdf) || !!facturaFile
     if (formData.serieLetra.trim() === "") {
       missingFields.push("Serie letra")
     }
@@ -178,6 +180,12 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
     }
     if (formData.fechaCompra.trim() === "") {
       missingFields.push("Fecha de compra")
+    }
+    if (!hasDeclaracionPdf) {
+      missingFields.push("Declaración de Importación (PDF)")
+    }
+    if (!hasFacturaPdf) {
+      missingFields.push("Factura de compra (PDF)")
     }
     if (missingFields.length > 0) {
       alert(`¡¡ALERTA te falta escribir : ${missingFields.join(", ")}!!`)
