@@ -298,7 +298,26 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
       } else {
         stored.push(updatedData)
       }
-      localStorage.setItem("contenedores", JSON.stringify(stored))
+
+      try {
+        localStorage.setItem("contenedores", JSON.stringify(stored))
+      } catch (error) {
+        console.error("Error al guardar contenedor en localStorage", error)
+
+        const quotaExceeded =
+          error instanceof DOMException &&
+          (error.name === "QuotaExceededError" ||
+            error.name === "NS_ERROR_DOM_QUOTA_REACHED" ||
+            error.code === 22 ||
+            error.code === 1014)
+
+        const message = quotaExceeded
+          ? "No se pudo guardar el contenedor porque el almacenamiento del navegador está lleno. Elimina archivos o registros antiguos e inténtalo nuevamente."
+          : "Ocurrió un error inesperado al guardar el contenedor. Inténtalo nuevamente."
+
+        alert(message)
+        return false
+      }
 
       if (mode === "redirect") {
         router.push("/contenedores")
