@@ -179,10 +179,6 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
     if (formData.fechaCompra.trim() === "") {
       missingFields.push("Fecha de compra")
     }
-    if (formData.notas.trim() === "") {
-      missingFields.push("Notas")
-    }
-
     if (missingFields.length > 0) {
       alert(`¡¡ALERTA te falta escribir : ${missingFields.join(", ")}!!`)
       return
