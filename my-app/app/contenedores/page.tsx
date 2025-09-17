@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { downloadFile } from "@/lib/utils"
+import { downloadFile, formatDateDisplay } from "@/lib/utils"
 
 interface Container {
   serieLetra: string
@@ -185,6 +185,8 @@ export default function ContainersPage() {
                   {filteredContainers.map((c, index) => {
                     const serieCodigo = `${c.serieLetra}${c.numeroSerie}${c.digitoControl ?? ""}`
                     const archivoBase = serieCodigo || "contenedor"
+                    const fechaDeclaracion = formatDateDisplay(c.fechaDeclaracion)
+                    const fechaCompra = formatDateDisplay(c.fechaCompra)
                     return (
                       <tr key={index} className="border-b last:border-0">
                         <td className="py-2 px-3 font-medium">{serieCodigo}</td>
@@ -193,8 +195,8 @@ export default function ContainersPage() {
                         <td className="py-2 px-3">{c.patio || "-"}</td>
                         <td className="py-2 px-3">{c.proveedor || "-"}</td>
                         <td className="py-2 px-3">{c.numeroDeclaracion || "-"}</td>
-                        <td className="py-2 px-3">{c.fechaDeclaracion || "-"}</td>
-                        <td className="py-2 px-3">{c.fechaCompra || "-"}</td>
+                        <td className="py-2 px-3">{fechaDeclaracion || "-"}</td>
+                        <td className="py-2 px-3">{fechaCompra || "-"}</td>
                         <td className="py-2 px-3">
                           {c.declaracionPdf ? (
                             <button
