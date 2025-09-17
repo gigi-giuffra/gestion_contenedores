@@ -146,16 +146,49 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
       digitoControl: digitoError,
     }
     setErrors(newErrors)
-    if (serieError || numeroError || digitoError) {
-      return
-    }
+
     const { estado, patio } = formData
     const requiresPatio =
       estado === "Disponible" || estado === "Mantenimiento" || estado === "Rancho"
-    if (requiresPatio && !patio) {
-      alert(
-        "Debe seleccionar un patio cuando el contenedor está Disponible, en Mantenimiento o en Rancho",
-      )
+
+    const missingFields: string[] = []
+    if (formData.serieLetra.trim() === "") {
+      missingFields.push("Serie letra")
+    }
+    if (formData.numeroSerie.trim() === "") {
+      missingFields.push("Número serie")
+    }
+    if (formData.digitoControl.trim() === "") {
+      missingFields.push("Dígito de control")
+    }
+    if (formData.tipo.trim() === "") {
+      missingFields.push("Tipo")
+    }
+    if (formData.estado.trim() === "") {
+      missingFields.push("Estado")
+    }
+    if (requiresPatio && patio.trim() === "") {
+      missingFields.push("Patio")
+    }
+    if (formData.numeroDeclaracion.trim() === "") {
+      missingFields.push("Nº Declaración de Importación")
+    }
+    if (formData.fechaDeclaracion.trim() === "") {
+      missingFields.push("Fecha Declaración de Importación")
+    }
+    if (formData.fechaCompra.trim() === "") {
+      missingFields.push("Fecha de compra")
+    }
+    if (formData.notas.trim() === "") {
+      missingFields.push("Notas")
+    }
+
+    if (missingFields.length > 0) {
+      alert(`¡¡ALERTA te falta escribir : ${missingFields.join(", ")}!!`)
+      return
+    }
+
+    if (serieError || numeroError || digitoError) {
       return
     }
     if (estado === "Arrendado" && patio) {
