@@ -43,6 +43,25 @@ export function ClientForm({ initialData, index }: ClientFormProps) {
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault()
 
+    const requiredFields: { key: keyof typeof formData; label: string }[] = [
+      { key: "nombre", label: "Razón Social / Nombre Completo" },
+      { key: "tipo", label: "Tipo de Cliente" },
+      { key: "documento", label: "Documento de Identidad (RUT/RUC)" },
+      { key: "email", label: "Correo Electrónico" },
+      { key: "telefono", label: "Teléfono" },
+      { key: "contacto", label: "Contacto" },
+      { key: "ciudad", label: "Ciudad" },
+    ]
+
+    const missingFields = requiredFields
+      .filter(({ key }) => formData[key].trim() === "")
+      .map(({ label }) => label)
+
+    if (missingFields.length > 0) {
+      alert(`¡¡ALERTA te falta escribir : ${missingFields.join(", ")}!!`)
+      return
+    }
+
     let existing: Cliente[] = []
     try {
       const stored = localStorage.getItem("clientes")

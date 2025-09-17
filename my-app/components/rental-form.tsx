@@ -107,8 +107,20 @@ export function RentalForm() {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
-    if (!formData.contenedor || !formData.cliente) {
-      alert("Debe seleccionar contenedor y cliente")
+    const requiredFields: { key: keyof RentalData; label: string }[] = [
+      { key: "contenedor", label: "Contenedor" },
+      { key: "cliente", label: "Cliente" },
+      { key: "fechaEntrega", label: "Fecha de entrega" },
+      { key: "codigoGuia", label: "Código guía despacho" },
+      { key: "fechaRetiro", label: "Fecha de retiro" },
+    ]
+
+    const missingFields = requiredFields
+      .filter(({ key }) => (formData[key] ?? "").trim() === "")
+      .map(({ label }) => label)
+
+    if (missingFields.length > 0) {
+      alert(`¡¡ALERTA te falta escribir : ${missingFields.join(", ")}!!`)
       return
     }
 
