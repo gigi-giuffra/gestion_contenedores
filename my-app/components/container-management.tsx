@@ -77,11 +77,18 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
     numeroSerie: "",
     digitoControl: "",
   })
+  const [fileErrors, setFileErrors] = useState({
+    declaracion: false,
+    factura: false,
+  })
 
   const [declaracionFile, setDeclaracionFile] = useState<File | null>(null)
   const [facturaFile, setFacturaFile] = useState<File | null>(null)
   const declaracionInputRef = useRef<HTMLInputElement>(null)
   const facturaInputRef = useRef<HTMLInputElement>(null)
+
+  const hasDeclaracionPdfSelected = Boolean(formData.declaracionPdf) || !!declaracionFile
+  const hasFacturaPdfSelected = Boolean(formData.facturaPdf) || !!facturaFile
 
   const router = useRouter()
   const isEditing = typeof index === "number" && !!initialData
@@ -135,6 +142,20 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
     })
   }
 
+  const handleDeclaracionFileChange = (file: File | null) => {
+    setDeclaracionFile(file)
+    if (file) {
+      setFileErrors((prev) => ({ ...prev, declaracion: false }))
+    }
+  }
+
+  const handleFacturaFileChange = (file: File | null) => {
+    setFacturaFile(file)
+    if (file) {
+      setFileErrors((prev) => ({ ...prev, factura: false }))
+    }
+  }
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     const serieError = validateSerieLetra(formData.serieLetra)
@@ -152,8 +173,12 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
       estado === "Disponible" || estado === "Mantenimiento" || estado === "Rancho"
 
     const missingFields: string[] = []
-    const hasDeclaracionPdf = Boolean(formData.declaracionPdf) || !!declaracionFile
-    const hasFacturaPdf = Boolean(formData.facturaPdf) || !!facturaFile
+    const hasDeclaracionPdf = hasDeclaracionPdfSelected
+    const hasFacturaPdf = hasFacturaPdfSelected
+    setFileErrors({
+      declaracion: !hasDeclaracionPdf,
+      factura: !hasFacturaPdf,
+    })
     if (formData.serieLetra.trim() === "") {
       missingFields.push("Serie letra")
     }
@@ -445,13 +470,18 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
           </div>
 
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Declaración de Importación (PDF)</Label>
+            <Label htmlFor="declaracion-pdf" className="text-sm font-medium">
+              Declaración de Importación (PDF)
+              <span className="ml-1 text-destructive">*</span>
+            </Label>
             <input
+              id="declaracion-pdf"
               type="file"
               accept="application/pdf"
               ref={declaracionInputRef}
-              onChange={(e) => setDeclaracionFile(e.target.files?.[0] || null)}
+              onChange={(e) => handleDeclaracionFileChange(e.target.files?.[0] || null)}
               className="hidden"
+              aria-required="true"
             />
             <div className="flex items-center gap-2">
               <Button
@@ -473,6 +503,11 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
               </span>
             </div>
             <p className="text-xs text-muted-foreground">Subir la Declaración de Importación en PDF</p>
+            {fileErrors.declaracion && (
+              <p className="text-sm text-destructive">
+                Debes adjuntar la Declaración de Importación en PDF.
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -496,13 +531,18 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
         {/* File Upload Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Ingresar factura (PDF)</Label>
+            <Label htmlFor="factura-pdf" className="text-sm font-medium">
+              Ingresar factura (PDF)
+              <span className="ml-1 text-destructive">*</span>
+            </Label>
             <input
+              id="factura-pdf"
               type="file"
               accept="application/pdf"
               ref={facturaInputRef}
-              onChange={(e) => setFacturaFile(e.target.files?.[0] || null)}
+              onChange={(e) => handleFacturaFileChange(e.target.files?.[0] || null)}
               className="hidden"
+              aria-required="true"
             />
             <div className="flex items-center gap-2">
               <Button
@@ -524,6 +564,11 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
               </span>
             </div>
             <p className="text-xs text-muted-foreground">Subir factura de compra en formato PDF</p>
+            {fileErrors.factura && (
+              <p className="text-sm text-destructive">
+                Debes adjuntar la factura de compra en PDF.
+              </p>
+            )}
           </div>
 
           <div className="space-y-4">
