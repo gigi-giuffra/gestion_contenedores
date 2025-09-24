@@ -41,6 +41,32 @@ export default function ContainersPage() {
   const [fechaFin, setFechaFin] = useState("")
   const [busquedaSerie, setBusquedaSerie] = useState("")
 
+  const estadoVisualConfig: Record<
+    string,
+    { chip: string; dot: string; label: string }
+  > = {
+    Disponible: {
+      chip: "bg-emerald-100 text-emerald-700 ring-emerald-200",
+      dot: "bg-emerald-500",
+      label: "Disponible",
+    },
+    Arrendado: {
+      chip: "bg-orange-100 text-orange-700 ring-orange-200",
+      dot: "bg-orange-500",
+      label: "Arrendado",
+    },
+    Mantenimiento: {
+      chip: "bg-amber-100 text-amber-700 ring-amber-200",
+      dot: "bg-amber-500",
+      label: "Mantenimiento",
+    },
+    Rancho: {
+      chip: "bg-slate-200 text-slate-700 ring-slate-300",
+      dot: "bg-slate-500",
+      label: "Rancho",
+    },
+  }
+
   useEffect(() => {
     try {
       const stored = JSON.parse(localStorage.getItem("contenedores") || "[]")
@@ -167,6 +193,7 @@ export default function ContainersPage() {
               <table className="min-w-full text-sm">
                 <thead>
                   <tr className="border-b">
+                    <th className="py-2 px-3" aria-label="Estado" />
                     <th className="py-2 px-3 text-left">Serie</th>
                     <th className="py-2 px-3 text-left">Tipo</th>
                     <th className="py-2 px-3 text-left">Estado</th>
@@ -187,8 +214,24 @@ export default function ContainersPage() {
                     const archivoBase = serieCodigo || "contenedor"
                     const fechaDeclaracion = formatDateDisplay(c.fechaDeclaracion)
                     const fechaCompra = formatDateDisplay(c.fechaCompra)
+                    const estadoConfig =
+                      estadoVisualConfig[c.estado] ?? {
+                        chip: "bg-slate-100 text-slate-700 ring-slate-200",
+                        dot: "bg-slate-400",
+                        label: c.estado || "Sin estado",
+                      }
                     return (
                       <tr key={index} className="border-b last:border-0">
+                        <td className="py-2 px-3">
+                          <span
+                            className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset ${estadoConfig.chip}`}
+                          >
+                            <span
+                              className={`h-2.5 w-2.5 rounded-full ${estadoConfig.dot}`}
+                            />
+                            {estadoConfig.label}
+                          </span>
+                        </td>
                         <td className="py-2 px-3 font-medium">{serieCodigo}</td>
                         <td className="py-2 px-3 capitalize">{c.tipo}</td>
                         <td className="py-2 px-3">{c.estado}</td>
