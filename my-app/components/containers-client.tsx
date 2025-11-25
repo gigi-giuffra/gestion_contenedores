@@ -1,0 +1,264 @@
+"use client"
+
+import Link from "next/link"
+import { useMemo, useState } from "react"
+
+import { DashboardLayout } from "@/components/dashboard-layout"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import type { Tables } from "@/lib/database.types"
+import { downloadFile, formatDateDisplay } from "@/lib/utils"
+
+export type ContainerRow = Tables<"contenedores">
+
+interface ContainersClientProps {
+  containers: ContainerRow[]
+  errorMessage?: string | null
+}
+
+export function ContainersClient({ containers, errorMessage }: ContainersClientProps) {
+  const [estado, setEstado] = useState("")
+  const [tipo, setTipo] = useState("")
+  const [patio, setPatio] = useState("")
+  const [proveedor, setProveedor] = useState("")
+  const [fechaInicio, setFechaInicio] = useState("")
+  const [fechaFin, setFechaFin] = useState("")
+  const [busquedaSerie, setBusquedaSerie] = useState("")
+
+  const estadoVisualConfig: Record<string, { chip: string; dot: string; label: string }> = {
+    Disponible: {
+      chip: "bg-emerald-100 text-emerald-700 ring-emerald-200",
+      dot: "bg-emerald-500",
+      label: "Disponible",
+    },
+    Arrendado: {
+      chip: "bg-orange-100 text-orange-700 ring-orange-200",
+      dot: "bg-orange-500",
+      label: "Arrendado",
+    },
+    Mantenimiento: {
+      chip: "bg-amber-100 text-amber-700 ring-amber-200",
+      dot: "bg-amber-500",
+      label: "Mantenimiento",
+    },
+    Rancho: {
+      chip: "bg-slate-200 text-slate-700 ring-slate-300",
+      dot: "bg-slate-500",
+      label: "Rancho",
+    },
+  }
+
+  const filteredContainers = useMemo(() => {
+    return containers.filter((c) => {
+      const matchesEstado = estado === "todos" || !estado || c.estado === estado
+      const matchesTipo = tipo === "todos" || !tipo || c.tipo === tipo
+      const matchesPatio = patio === "todos" || !patio || c.patio === patio
+      const matchesProveedor =
+        !proveedor || c.proveedor?.toLowerCase().includes(proveedor.toLowerCase())
+      const serieCompleta = `${c.serieLetra}${c.numeroSerie}${c.digitoControl ?? ""}`.toLowerCase()
+      const matchesSerie = !busquedaSerie || serieCompleta.includes(busquedaSerie.toLowerCase())
+      const fecha = c.fechaCompra ? new Date(c.fechaCompra) : null
+      const matchesFechaInicio = !fechaInicio || (fecha && new Date(fechaInicio) <= fecha)
+      const matchesFechaFin = !fechaFin || (fecha && new Date(fechaFin) >= fecha)
+      return (
+        matchesEstado &&
+        matchesTipo &&
+        matchesPatio &&
+        matchesProveedor &&
+        matchesSerie &&
+        matchesFechaInicio &&
+        matchesFechaFin
+      )
+    })
+  }, [busquedaSerie, containers, estado, fechaFin, fechaInicio, patio, proveedor, tipo])
+
+  return (
+    <DashboardLayout breadcrumbs={["Contenedores"]}>
+      <Card className="max-w-4xl">
+        <CardHeader className="flex flex-row items-center justify-between gap-4">
+          <div>
+            <CardTitle className="text-2xl font-semibold">Registro de Contenedores</CardTitle>
+            {errorMessage ? (
+              <p className="mt-2 text-sm text-destructive">{errorMessage}</p>
+            ) : (
+              <p className="mt-2 text-sm text-muted-foreground">
+                Los registros se leen directamente desde tu instancia de Supabase.
+              </p>
+            )}
+          </div>
+          <Button asChild>
+            <Link href="/contenedores/nuevo">Añadir contenedor</Link>
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2 mb-4">
+            <Input
+              placeholder="Buscar serie"
+              value={busquedaSerie}
+              onChange={(e) => setBusquedaSerie(e.target.value)}
+              className="w-[150px]"
+            />
+            <Select value={estado} onValueChange={setEstado}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="Disponible">Disponible</SelectItem>
+                <SelectItem value="Arrendado">Arrendado</SelectItem>
+                <SelectItem value="Mantenimiento">Mantenimiento</SelectItem>
+                <SelectItem value="Rancho">Rancho</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={tipo} onValueChange={setTipo}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="banos">BAÑOS</SelectItem>
+                <SelectItem value="duchas">DUCHAS</SelectItem>
+                <SelectItem value="oficina">OFICINA</SelectItem>
+                <SelectItem value="ofic-bano">OFIC/BAÑO</SelectItem>
+                <SelectItem value="ofic-dormitorio">OFIC/DORMITORIO</SelectItem>
+                <SelectItem value="ofic-separ">OFIC/SEPAR</SelectItem>
+                <SelectItem value="bodega-40">BODEGA 40</SelectItem>
+                <SelectItem value="bodega-50">BODEGA 50%</SelectItem>
+                <SelectItem value="bod-estan">BOD/ESTAN</SelectItem>
+                <SelectItem value="bod-art-pel">BOD ART PEL</SelectItem>
+                <SelectItem value="sala-cambio">SALA CAMBIO</SelectItem>
+                <SelectItem value="bod-estanque">BOD/ESTANQUE</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={patio} onValueChange={setPatio}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Patio" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="patio-1">PATIO 1</SelectItem>
+                <SelectItem value="patio-2">PATIO 2</SelectItem>
+                <SelectItem value="patio-3">PATIO 3</SelectItem>
+                <SelectItem value="patio-4">PATIO 4</SelectItem>
+                <SelectItem value="patio-5">PATIO 5</SelectItem>
+              </SelectContent>
+            </Select>
+            <Input
+              placeholder="Proveedor"
+              value={proveedor}
+              onChange={(e) => setProveedor(e.target.value)}
+              className="w-[150px]"
+            />
+            <Input type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} />
+            <Input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} />
+          </div>
+          {filteredContainers.length === 0 ? (
+            <p className="text-muted-foreground">
+              {errorMessage ?? "No hay contenedores registrados."}
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="py-2 px-3" aria-label="Estado" />
+                    <th className="py-2 px-3 text-left">Serie</th>
+                    <th className="py-2 px-3 text-left">Tipo</th>
+                    <th className="py-2 px-3 text-left">Estado</th>
+                    <th className="py-2 px-3 text-left">Patio</th>
+                    <th className="py-2 px-3 text-left">Proveedor</th>
+                    <th className="py-2 px-3 text-left">Nº Declaración</th>
+                    <th className="py-2 px-3 text-left">Fecha Declaración</th>
+                    <th className="py-2 px-3 text-left">Fecha Compra</th>
+                    <th className="py-2 px-3 text-left">PDF D.I</th>
+                    <th className="py-2 px-3 text-left">PDF Factura</th>
+                    <th className="py-2 px-3 text-left">Notas</th>
+                    <th className="py-2 px-3 text-left">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredContainers.map((c) => {
+                    const serieCodigo = `${c.serieLetra}${c.numeroSerie}${c.digitoControl ?? ""}`
+                    const archivoBase = serieCodigo || "contenedor"
+                    const fechaDeclaracion = formatDateDisplay(c.fechaDeclaracion)
+                    const fechaCompra = formatDateDisplay(c.fechaCompra)
+                    const estadoConfig =
+                      estadoVisualConfig[c.estado] ?? {
+                        chip: "bg-slate-100 text-slate-700 ring-slate-200",
+                        dot: "bg-slate-400",
+                        label: c.estado || "Sin estado",
+                      }
+                    return (
+                      <tr key={c.id} className="border-b last:border-0">
+                        <td className="py-2 px-3">
+                          <span
+                            className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset ${estadoConfig.chip}`}
+                          >
+                            <span className={`h-2.5 w-2.5 rounded-full ${estadoConfig.dot}`} />
+                            {estadoConfig.label}
+                          </span>
+                        </td>
+                        <td className="py-2 px-3 font-medium">{serieCodigo}</td>
+                        <td className="py-2 px-3 capitalize">{c.tipo}</td>
+                        <td className="py-2 px-3">{c.estado}</td>
+                        <td className="py-2 px-3">{c.patio || "-"}</td>
+                        <td className="py-2 px-3">{c.proveedor || "-"}</td>
+                        <td className="py-2 px-3">{c.numeroDeclaracion || "-"}</td>
+                        <td className="py-2 px-3 whitespace-nowrap">{fechaDeclaracion || "-"}</td>
+                        <td className="py-2 px-3 whitespace-nowrap">{fechaCompra || "-"}</td>
+                        <td className="py-2 px-3">
+                          {c.declaracionPdf ? (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                downloadFile(c.declaracionPdf, `${archivoBase}_declaracion.pdf`)
+                              }
+                              className="text-primary underline"
+                            >
+                              Ver
+                            </button>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
+                        <td className="py-2 px-3">
+                          {c.facturaPdf ? (
+                            <button
+                              type="button"
+                              onClick={() => downloadFile(c.facturaPdf, `${archivoBase}_factura.pdf`)}
+                              className="text-primary underline"
+                            >
+                              Ver
+                            </button>
+                          ) : (
+                            "-"
+                          )}
+                        </td>
+                        <td className="py-2 px-3 max-w-[200px] truncate">{c.notas || "-"}</td>
+                        <td className="py-2 px-3">
+                          <Link href={`/contenedores/${c.id}`}>
+                            <Button variant="outline" size="sm">
+                              Modificar
+                            </Button>
+                          </Link>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </DashboardLayout>
+  )
+}
