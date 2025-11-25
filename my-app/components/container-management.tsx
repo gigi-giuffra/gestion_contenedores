@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -17,29 +17,41 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Calendar, Upload, Container, FileText } from "lucide-react"
 import { downloadFile } from "@/lib/utils"
+import { getSupabaseBrowserClient } from "@/lib/supabaseClient"
+import type { Tables, TablesInsert, TablesUpdate } from "@/lib/database.types"
 
-export interface ContainerFormData {
-  serieLetra: string
-  numeroSerie: string
-  digitoControl?: string
-  tipo: string
-  estado: string
+type ContainerRow = Tables<"contenedores">
+type ContainerInsert = TablesInsert<"contenedores">
+type ContainerUpdate = TablesUpdate<"contenedores">
+
+interface ContainerManagementProps {
+  initialData?: ContainerRow
+  containerId?: string
+}
+
+type ContainerFormState = Omit<
+  ContainerInsert,
+  | "created_at"
+  | "digitoControl"
+  | "patio"
+  | "proveedor"
+  | "numeroDeclaracion"
+  | "fechaDeclaracion"
+  | "fechaCompra"
+  | "notas"
+  | "declaracionPdf"
+  | "facturaPdf"
+> & {
+  digitoControl: string
   patio: string
   proveedor: string
   numeroDeclaracion: string
   fechaDeclaracion: string
   fechaCompra: string
   notas: string
-  declaracionPdf?: string
-  facturaPdf?: string
+  declaracionPdf: string
+  facturaPdf: string
 }
-
-interface ContainerManagementProps {
-  initialData?: ContainerFormData
-  index?: number
-}
-
-type ContainerFormState = Omit<ContainerFormData, "digitoControl"> & { digitoControl: string }
 
 const createInitialErrors = () => ({
   serieLetra: "",
@@ -63,7 +75,7 @@ const createEmptyFormState = (): ContainerFormState => ({
   facturaPdf: "",
 })
 
-const sanitizeInitialData = (data: ContainerFormData): ContainerFormState => ({
+const sanitizeInitialData = (data: ContainerRow): ContainerFormState => ({
   ...createEmptyFormState(),
   ...data,
   serieLetra: data.serieLetra
@@ -73,9 +85,33 @@ const sanitizeInitialData = (data: ContainerFormData): ContainerFormState => ({
   digitoControl: data.digitoControl ? data.digitoControl.replace(/\D/g, "").slice(0, 1) : "",
   declaracionPdf: data.declaracionPdf ?? "",
   facturaPdf: data.facturaPdf ?? "",
+  patio: data.patio ?? "",
+  proveedor: data.proveedor ?? "",
+  numeroDeclaracion: data.numeroDeclaracion ?? "",
+  fechaDeclaracion: data.fechaDeclaracion ?? "",
+  fechaCompra: data.fechaCompra ?? "",
+  notas: data.notas ?? "",
 })
 
-export function ContainerManagement({ initialData, index }: ContainerManagementProps) {
+const toSupabasePayload = (
+  state: ContainerFormState,
+): ContainerInsert | ContainerUpdate => ({
+  serieLetra: state.serieLetra,
+  numeroSerie: state.numeroSerie,
+  digitoControl: state.digitoControl || null,
+  tipo: state.tipo,
+  estado: state.estado,
+  patio: state.patio || null,
+  proveedor: state.proveedor || null,
+  numeroDeclaracion: state.numeroDeclaracion || null,
+  fechaDeclaracion: state.fechaDeclaracion || null,
+  fechaCompra: state.fechaCompra || null,
+  notas: state.notas || null,
+  declaracionPdf: state.declaracionPdf || null,
+  facturaPdf: state.facturaPdf || null,
+})
+
+export function ContainerManagement({ initialData, containerId }: ContainerManagementProps) {
   const [formData, setFormData] = useState<ContainerFormState>(() =>
     initialData ? sanitizeInitialData(initialData) : createEmptyFormState(),
   )
@@ -90,7 +126,11 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
   const declaracionInputRef = useRef<HTMLInputElement>(null)
   const facturaInputRef = useRef<HTMLInputElement>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [recordId, setRecordId] = useState<string | undefined>(() =>
+    containerId ?? initialData?.id,
+  )
 
   const clearFileSelections = () => {
     setDeclaracionFile(null)
@@ -108,13 +148,15 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
     setErrors(createInitialErrors())
     setFileErrors({ declaracion: false, factura: false })
     clearFileSelections()
+    setSubmitError(null)
   }
 
   const hasDeclaracionPdfSelected = Boolean(formData.declaracionPdf) || !!declaracionFile
   const hasFacturaPdfSelected = Boolean(formData.facturaPdf) || !!facturaFile
 
   const router = useRouter()
-  const isEditing = typeof index === "number" && !!initialData
+  const supabase = useMemo(() => getSupabaseBrowserClient(), [])
+  const isEditing = Boolean(recordId)
 
   const validateSerieLetra = (value: string) =>
     /^[A-Z]{4}$/.test(value) ? "" : "Debe ser una secuencia de 4 letras (A-Z)."
@@ -195,6 +237,7 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
 
     setIsSubmitting(true)
     setSuccessMessage(null)
+    setSubmitError(null)
 
     try {
       const serieError = validateSerieLetra(formData.serieLetra)
@@ -273,60 +316,42 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
         updatedData.facturaPdf = await readFileAsDataURL(facturaFile)
       }
 
-      let stored: ContainerFormData[] = []
-      try {
-        const parsed = JSON.parse(localStorage.getItem("contenedores") || "[]")
-        if (Array.isArray(parsed)) {
-          stored = parsed
-        } else {
-          alert(
-            "Los datos de contenedores están corruptos. Se reiniciará el registro.",
-          )
-          stored = []
-        }
-      } catch (error) {
-        if (error instanceof SyntaxError) {
-          alert(
-            "Los datos de contenedores están corruptos. Se reiniciará el registro.",
-          )
-        }
-        stored = []
-      }
+      const payload = toSupabasePayload(updatedData)
+      let savedId = recordId
 
-      if (isEditing && typeof index === "number") {
-        stored[index] = updatedData
+      if (isEditing && recordId) {
+        const { error } = await supabase
+          .from("contenedores")
+          .update(payload)
+          .eq("id", recordId)
+
+        if (error) {
+          throw error
+        }
       } else {
-        stored.push(updatedData)
-      }
+        const { data, error } = await supabase
+          .from("contenedores")
+          .insert(payload)
+          .select("id")
+          .single()
 
-      try {
-        localStorage.setItem("contenedores", JSON.stringify(stored))
-      } catch (error) {
-        console.error("Error al guardar contenedor en localStorage", error)
+        if (error) {
+          throw error
+        }
 
-        const quotaExceeded =
-          error instanceof DOMException &&
-          (error.name === "QuotaExceededError" ||
-            error.name === "NS_ERROR_DOM_QUOTA_REACHED" ||
-            error.code === 22 ||
-            error.code === 1014)
-
-        const message = quotaExceeded
-          ? "No se pudo guardar el contenedor porque el almacenamiento del navegador está lleno. Elimina archivos o registros antiguos e inténtalo nuevamente."
-          : "Ocurrió un error inesperado al guardar el contenedor. Inténtalo nuevamente."
-
-        alert(message)
-        return false
+        savedId = data?.id ?? undefined
       }
 
       if (mode === "redirect") {
         router.push("/contenedores")
       } else if (mode === "addAnother") {
         resetForm()
+        setRecordId(undefined)
         setSuccessMessage(
           "Contenedor guardado correctamente. Completa el siguiente registro.",
         )
       } else if (mode === "stay") {
+        setRecordId(savedId)
         setFormData({
           ...updatedData,
           declaracionPdf: updatedData.declaracionPdf ?? "",
@@ -339,6 +364,12 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
       }
 
       return true
+    } catch (error) {
+      console.error("Error al guardar contenedor en Supabase", error)
+      setSubmitError(
+        "No se pudo guardar el contenedor. Verifica tu conexión y las reglas de acceso en Supabase.",
+      )
+      return false
     } finally {
       setIsSubmitting(false)
     }
@@ -357,20 +388,19 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
     void submitForm("stay")
   }
 
-  const handleDelete = () => {
-    if (!isEditing || typeof index !== "number") return
+  const handleDelete = async () => {
+    if (!isEditing || !recordId) return
     if (confirm("¿Está seguro de eliminar este contenedor?")) {
-      let stored: ContainerFormData[] = []
-      try {
-        const parsed = JSON.parse(localStorage.getItem("contenedores") || "[]")
-        if (Array.isArray(parsed)) {
-          stored = parsed
-        }
-      } catch {
-        stored = []
+      const { error } = await supabase.from("contenedores").delete().eq("id", recordId)
+
+      if (error) {
+        console.error("Error al eliminar contenedor en Supabase", error)
+        setSubmitError(
+          "No se pudo eliminar el contenedor en Supabase. Revisa tus permisos y vuelve a intentar.",
+        )
+        return
       }
-      stored.splice(index, 1)
-      localStorage.setItem("contenedores", JSON.stringify(stored))
+
       router.push("/contenedores")
     }
   }
@@ -391,6 +421,11 @@ export function ContainerManagement({ initialData, index }: ContainerManagementP
             {successMessage && (
               <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
                 {successMessage}
+              </div>
+            )}
+            {submitError && (
+              <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                {submitError}
               </div>
             )}
 
